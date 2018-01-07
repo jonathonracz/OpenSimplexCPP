@@ -33,7 +33,7 @@ const int8_t gradients2D[] = {
  * that the triangular and square facets can be inscribed inside
  * circles of the same radius.
  */
-static const signed char gradients3D[] = {
+static const int8_t gradients3D[] = {
 	-11,  4,  4,     -4,  11,  4,    -4,  4,  11,
 	 11,  4,  4,      4,  11,  4,     4,  4,  11,
 	-11, -4,  4,     -4, -11,  4,    -4, -4,  11,
@@ -50,7 +50,7 @@ static const signed char gradients3D[] = {
  * skewed so that the tetrahedral and cubic facets can be inscribed inside
  * spheres of the same radius.
  */
-static const signed char gradients4D[] = {
+static const int8_t gradients4D[] = {
 	 3,  1,  1,  1,      1,  3,  1,  1,      1,  1,  3,  1,      1,  1,  1,  3,
 	-3,  1,  1,  1,     -1,  3,  1,  1,     -1,  1,  3,  1,     -1,  1,  1,  3,
 	 3, -1,  1,  1,      1, -3,  1,  1,      1, -1,  3,  1,      1, -1,  1,  3,
