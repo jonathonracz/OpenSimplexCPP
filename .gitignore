@@ -1,3 +1,4 @@
 *.png
 *.o
 open-simplex-noise-test
+*.dSYM
