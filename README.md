@@ -12,7 +12,7 @@ Usage is extremely simple:
 int main(int argc, char** argv)
 {
     OpenSimplex osimp(42); // Arbitrary seed
-    float value = osimp.noise2(7, 12) // Arbitrary x/y coordinate
+    float value = osimp.noise2(7, 12); // Arbitrary x/y coordinate
 }
 ```
 
