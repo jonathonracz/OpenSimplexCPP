@@ -16,28 +16,15 @@
 
 #include "open-simplex-noise.h"
 
-static float STRETCH_CONSTANT_2D = -0.211324865405187f;    /* (1 / sqrt(2 + 1) - 1 ) / 2; */
-static float SQUISH_CONSTANT_2D = 0.366025403784439f;     /* (sqrt(2 + 1) -1) / 2; */
-static float STRETCH_CONSTANT_3D = (-1.0f / 6.0f);            /* (1 / sqrt(3 + 1) - 1) / 3; */
-static float SQUISH_CONSTANT_3D = (1.0f / 3.0f);             /* (sqrt(3+1)-1)/3; */
-static float STRETCH_CONSTANT_4D = -0.138196601125011f;    /* (1 / sqrt(4 + 1) - 1) / 4; */
-static float SQUISH_CONSTANT_4D = 0.309016994374947f;     /* (sqrt(4 + 1) - 1) / 4; */
-	
-static float NORM_CONSTANT_2D = 47.0f;
-static float NORM_CONSTANT_3D = 103.0f;
-static float NORM_CONSTANT_4D = 30.0f;
-	
-static uint64_t DEFAULT_SEED = 0LL;
-
 /* 
  * Gradients for 2D. They approximate the directions to the
  * vertices of an octagon from the center.
  */
-static const int8_t gradients2D[] = {
-	 5,  2,    2,  5,
-	-5,  2,   -2,  5,
-	 5, -2,    2, -5,
-	-5, -2,   -2, -5,
+const int8_t gradients2D[] = {
+    5,  2,    2,  5,
+    -5,  2,   -2,  5,
+    5, -2,    2, -5,
+    -5, -2,   -2, -5,
 };
 
 /*	
@@ -152,8 +139,12 @@ int open_simplex_noise(int64_t seed, osn_context *ctx)
 /* 2D OpenSimplex (Simplectic) Noise. */
 float open_simplex_noise2(struct osn_context *ctx, float x, float y) 
 {
+    const float stretchConstant = -0.211324865405187f;    /* (1 / sqrt(2 + 1) - 1 ) / 2; */
+    const float squishConstant = 0.366025403784439f;     /* (sqrt(2 + 1) -1) / 2; */
+    const float normConstant = 47.0f;
+
 	/* Place input coordinates onto grid. */
-	float stretchOffset = (x + y) * STRETCH_CONSTANT_2D;
+	float stretchOffset = (x + y) * stretchConstant;
 	float xs = x + stretchOffset;
 	float ys = y + stretchOffset;
 		
@@ -162,7 +153,7 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 	int ysb = floor(ys);
 		
 	/* Skew out to get actual coordinates of rhombus origin. We'll need these later. */
-	float squishOffset = (xsb + ysb) * SQUISH_CONSTANT_2D;
+	float squishOffset = (xsb + ysb) * squishConstant;
 	float xb = xsb + squishOffset;
 	float yb = ysb + squishOffset;
 		
@@ -194,8 +185,8 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 	float value = 0;
 
 	/* Contribution (1,0) */
-	dx1 = dx0 - 1 - SQUISH_CONSTANT_2D;
-	dy1 = dy0 - 0 - SQUISH_CONSTANT_2D;
+	dx1 = dx0 - 1 - squishConstant;
+	dy1 = dy0 - 0 - squishConstant;
 	attn1 = 2 - dx1 * dx1 - dy1 * dy1;
 	if (attn1 > 0) {
 		attn1 *= attn1;
@@ -203,8 +194,8 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 	}
 
 	/* Contribution (0,1) */
-	dx2 = dx0 - 0 - SQUISH_CONSTANT_2D;
-	dy2 = dy0 - 1 - SQUISH_CONSTANT_2D;
+	dx2 = dx0 - 0 - squishConstant;
+	dy2 = dy0 - 1 - squishConstant;
 	attn2 = 2 - dx2 * dx2 - dy2 * dy2;
 	if (attn2 > 0) {
 		attn2 *= attn2;
@@ -228,8 +219,8 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 		} else { /* (1,0) and (0,1) are the closest two vertices. */
 			xsv_ext = xsb + 1;
 			ysv_ext = ysb + 1;
-			dx_ext = dx0 - 1 - 2 * SQUISH_CONSTANT_2D;
-			dy_ext = dy0 - 1 - 2 * SQUISH_CONSTANT_2D;
+			dx_ext = dx0 - 1 - 2 * squishConstant;
+			dy_ext = dy0 - 1 - 2 * squishConstant;
 		}
 	} else { /* We're inside the triangle (2-Simplex) at (1,1) */
 		zins = 2 - inSum;
@@ -237,13 +228,13 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 			if (xins > yins) {
 				xsv_ext = xsb + 2;
 				ysv_ext = ysb + 0;
-				dx_ext = dx0 - 2 - 2 * SQUISH_CONSTANT_2D;
-				dy_ext = dy0 + 0 - 2 * SQUISH_CONSTANT_2D;
+				dx_ext = dx0 - 2 - 2 * squishConstant;
+				dy_ext = dy0 + 0 - 2 * squishConstant;
 			} else {
 				xsv_ext = xsb + 0;
 				ysv_ext = ysb + 2;
-				dx_ext = dx0 + 0 - 2 * SQUISH_CONSTANT_2D;
-				dy_ext = dy0 - 2 - 2 * SQUISH_CONSTANT_2D;
+				dx_ext = dx0 + 0 - 2 * squishConstant;
+				dy_ext = dy0 - 2 - 2 * squishConstant;
 			}
 		} else { /* (1,0) and (0,1) are the closest two vertices. */
 			dx_ext = dx0;
@@ -253,8 +244,8 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 		}
 		xsb += 1;
 		ysb += 1;
-		dx0 = dx0 - 1 - 2 * SQUISH_CONSTANT_2D;
-		dy0 = dy0 - 1 - 2 * SQUISH_CONSTANT_2D;
+		dx0 = dx0 - 1 - 2 * squishConstant;
+		dy0 = dy0 - 1 - 2 * squishConstant;
 	}
 		
 	/* Contribution (0,0) or (1,1) */
@@ -271,7 +262,7 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
 		value += attn_ext * attn_ext * extrapolate2(ctx, xsv_ext, ysv_ext, dx_ext, dy_ext);
 	}
 	
-	return value / NORM_CONSTANT_2D;
+	return value / normConstant;
 }
 	
 /*
@@ -279,8 +270,12 @@ float open_simplex_noise2(struct osn_context *ctx, float x, float y)
  */
 float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 {
+    const float stretchConstant = (-1.0f / 6.0f);            /* (1 / sqrt(3 + 1) - 1) / 3; */
+    const float squishConstant = (1.0f / 3.0f);             /* (sqrt(3+1)-1)/3; */
+    const float normConstant = 103.0f;
+
 	/* Place input coordinates on simplectic honeycomb. */
-	float stretchOffset = (x + y + z) * STRETCH_CONSTANT_3D;
+	float stretchOffset = (x + y + z) * stretchConstant;
 	float xs = x + stretchOffset;
 	float ys = y + stretchOffset;
 	float zs = z + stretchOffset;
@@ -291,7 +286,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 	int zsb = floor(zs);
 	
 	/* Skew out to get actual coordinates of rhombohedron origin. We'll need these later. */
-	float squishOffset = (xsb + ysb + zsb) * SQUISH_CONSTANT_3D;
+	float squishOffset = (xsb + ysb + zsb) * squishConstant;
 	float xb = xsb + squishOffset;
 	float yb = ysb + squishOffset;
 	float zb = zsb + squishOffset;
@@ -394,34 +389,34 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 			if ((c & 0x01) == 0) {
 				xsv_ext0 = xsb;
 				xsv_ext1 = xsb - 1;
-				dx_ext0 = dx0 - 2 * SQUISH_CONSTANT_3D;
-				dx_ext1 = dx0 + 1 - SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 2 * squishConstant;
+				dx_ext1 = dx0 + 1 - squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsb + 1;
-				dx_ext0 = dx0 - 1 - 2 * SQUISH_CONSTANT_3D;
-				dx_ext1 = dx0 - 1 - SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 1 - 2 * squishConstant;
+				dx_ext1 = dx0 - 1 - squishConstant;
 			}
 
 			if ((c & 0x02) == 0) {
 				ysv_ext0 = ysb;
 				ysv_ext1 = ysb - 1;
-				dy_ext0 = dy0 - 2 * SQUISH_CONSTANT_3D;
-				dy_ext1 = dy0 + 1 - SQUISH_CONSTANT_3D;
+				dy_ext0 = dy0 - 2 * squishConstant;
+				dy_ext1 = dy0 + 1 - squishConstant;
 			} else {
 				ysv_ext0 = ysv_ext1 = ysb + 1;
-				dy_ext0 = dy0 - 1 - 2 * SQUISH_CONSTANT_3D;
-				dy_ext1 = dy0 - 1 - SQUISH_CONSTANT_3D;
+				dy_ext0 = dy0 - 1 - 2 * squishConstant;
+				dy_ext1 = dy0 - 1 - squishConstant;
 			}
 
 			if ((c & 0x04) == 0) {
 				zsv_ext0 = zsb;
 				zsv_ext1 = zsb - 1;
-				dz_ext0 = dz0 - 2 * SQUISH_CONSTANT_3D;
-				dz_ext1 = dz0 + 1 - SQUISH_CONSTANT_3D;
+				dz_ext0 = dz0 - 2 * squishConstant;
+				dz_ext1 = dz0 + 1 - squishConstant;
 			} else {
 				zsv_ext0 = zsv_ext1 = zsb + 1;
-				dz_ext0 = dz0 - 1 - 2 * SQUISH_CONSTANT_3D;
-				dz_ext1 = dz0 - 1 - SQUISH_CONSTANT_3D;
+				dz_ext0 = dz0 - 1 - 2 * squishConstant;
+				dz_ext1 = dz0 - 1 - squishConstant;
 			}
 		}
 
@@ -433,9 +428,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (1,0,0) */
-		dx1 = dx0 - 1 - SQUISH_CONSTANT_3D;
-		dy1 = dy0 - 0 - SQUISH_CONSTANT_3D;
-		dz1 = dz0 - 0 - SQUISH_CONSTANT_3D;
+		dx1 = dx0 - 1 - squishConstant;
+		dy1 = dy0 - 0 - squishConstant;
+		dz1 = dz0 - 0 - squishConstant;
 		attn1 = 2 - dx1 * dx1 - dy1 * dy1 - dz1 * dz1;
 		if (attn1 > 0) {
 			attn1 *= attn1;
@@ -443,8 +438,8 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (0,1,0) */
-		dx2 = dx0 - 0 - SQUISH_CONSTANT_3D;
-		dy2 = dy0 - 1 - SQUISH_CONSTANT_3D;
+		dx2 = dx0 - 0 - squishConstant;
+		dy2 = dy0 - 1 - squishConstant;
 		dz2 = dz1;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2;
 		if (attn2 > 0) {
@@ -455,7 +450,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		/* Contribution (0,0,1) */
 		dx3 = dx2;
 		dy3 = dy1;
-		dz3 = dz0 - 1 - SQUISH_CONSTANT_3D;
+		dz3 = dz0 - 1 - squishConstant;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3;
 		if (attn3 > 0) {
 			attn3 *= attn3;
@@ -485,16 +480,16 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 			if ((c & 0x01) != 0) {
 				xsv_ext0 = xsb + 2;
 				xsv_ext1 = xsb + 1;
-				dx_ext0 = dx0 - 2 - 3 * SQUISH_CONSTANT_3D;
-				dx_ext1 = dx0 - 1 - 3 * SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 2 - 3 * squishConstant;
+				dx_ext1 = dx0 - 1 - 3 * squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsb;
-				dx_ext0 = dx_ext1 = dx0 - 3 * SQUISH_CONSTANT_3D;
+				dx_ext0 = dx_ext1 = dx0 - 3 * squishConstant;
 			}
 
 			if ((c & 0x02) != 0) {
 				ysv_ext0 = ysv_ext1 = ysb + 1;
-				dy_ext0 = dy_ext1 = dy0 - 1 - 3 * SQUISH_CONSTANT_3D;
+				dy_ext0 = dy_ext1 = dy0 - 1 - 3 * squishConstant;
 				if ((c & 0x01) != 0) {
 					ysv_ext1 += 1;
 					dy_ext1 -= 1;
@@ -504,17 +499,17 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysb;
-				dy_ext0 = dy_ext1 = dy0 - 3 * SQUISH_CONSTANT_3D;
+				dy_ext0 = dy_ext1 = dy0 - 3 * squishConstant;
 			}
 
 			if ((c & 0x04) != 0) {
 				zsv_ext0 = zsb + 1;
 				zsv_ext1 = zsb + 2;
-				dz_ext0 = dz0 - 1 - 3 * SQUISH_CONSTANT_3D;
-				dz_ext1 = dz0 - 2 - 3 * SQUISH_CONSTANT_3D;
+				dz_ext0 = dz0 - 1 - 3 * squishConstant;
+				dz_ext1 = dz0 - 2 - 3 * squishConstant;
 			} else {
 				zsv_ext0 = zsv_ext1 = zsb;
-				dz_ext0 = dz_ext1 = dz0 - 3 * SQUISH_CONSTANT_3D;
+				dz_ext0 = dz_ext1 = dz0 - 3 * squishConstant;
 			}
 		} else { /* (1,1,1) is not one of the closest two tetrahedral vertices. */
 			c = (int8_t)(aPoint & bPoint); /* Our two extra vertices are determined by the closest two. */
@@ -522,41 +517,41 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 			if ((c & 0x01) != 0) {
 				xsv_ext0 = xsb + 1;
 				xsv_ext1 = xsb + 2;
-				dx_ext0 = dx0 - 1 - SQUISH_CONSTANT_3D;
-				dx_ext1 = dx0 - 2 - 2 * SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 1 - squishConstant;
+				dx_ext1 = dx0 - 2 - 2 * squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsb;
-				dx_ext0 = dx0 - SQUISH_CONSTANT_3D;
-				dx_ext1 = dx0 - 2 * SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - squishConstant;
+				dx_ext1 = dx0 - 2 * squishConstant;
 			}
 
 			if ((c & 0x02) != 0) {
 				ysv_ext0 = ysb + 1;
 				ysv_ext1 = ysb + 2;
-				dy_ext0 = dy0 - 1 - SQUISH_CONSTANT_3D;
-				dy_ext1 = dy0 - 2 - 2 * SQUISH_CONSTANT_3D;
+				dy_ext0 = dy0 - 1 - squishConstant;
+				dy_ext1 = dy0 - 2 - 2 * squishConstant;
 			} else {
 				ysv_ext0 = ysv_ext1 = ysb;
-				dy_ext0 = dy0 - SQUISH_CONSTANT_3D;
-				dy_ext1 = dy0 - 2 * SQUISH_CONSTANT_3D;
+				dy_ext0 = dy0 - squishConstant;
+				dy_ext1 = dy0 - 2 * squishConstant;
 			}
 
 			if ((c & 0x04) != 0) {
 				zsv_ext0 = zsb + 1;
 				zsv_ext1 = zsb + 2;
-				dz_ext0 = dz0 - 1 - SQUISH_CONSTANT_3D;
-				dz_ext1 = dz0 - 2 - 2 * SQUISH_CONSTANT_3D;
+				dz_ext0 = dz0 - 1 - squishConstant;
+				dz_ext1 = dz0 - 2 - 2 * squishConstant;
 			} else {
 				zsv_ext0 = zsv_ext1 = zsb;
-				dz_ext0 = dz0 - SQUISH_CONSTANT_3D;
-				dz_ext1 = dz0 - 2 * SQUISH_CONSTANT_3D;
+				dz_ext0 = dz0 - squishConstant;
+				dz_ext1 = dz0 - 2 * squishConstant;
 			}
 		}
 		
 		/* Contribution (1,1,0) */
-		dx3 = dx0 - 1 - 2 * SQUISH_CONSTANT_3D;
-		dy3 = dy0 - 1 - 2 * SQUISH_CONSTANT_3D;
-		dz3 = dz0 - 0 - 2 * SQUISH_CONSTANT_3D;
+		dx3 = dx0 - 1 - 2 * squishConstant;
+		dy3 = dy0 - 1 - 2 * squishConstant;
+		dz3 = dz0 - 0 - 2 * squishConstant;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3;
 		if (attn3 > 0) {
 			attn3 *= attn3;
@@ -565,8 +560,8 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 
 		/* Contribution (1,0,1) */
 		dx2 = dx3;
-		dy2 = dy0 - 0 - 2 * SQUISH_CONSTANT_3D;
-		dz2 = dz0 - 1 - 2 * SQUISH_CONSTANT_3D;
+		dy2 = dy0 - 0 - 2 * squishConstant;
+		dz2 = dz0 - 1 - 2 * squishConstant;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2;
 		if (attn2 > 0) {
 			attn2 *= attn2;
@@ -574,7 +569,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (0,1,1) */
-		dx1 = dx0 - 0 - 2 * SQUISH_CONSTANT_3D;
+		dx1 = dx0 - 0 - 2 * squishConstant;
 		dy1 = dy3;
 		dz1 = dz2;
 		attn1 = 2 - dx1 * dx1 - dy1 * dy1 - dz1 * dz1;
@@ -584,9 +579,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (1,1,1) */
-		dx0 = dx0 - 1 - 3 * SQUISH_CONSTANT_3D;
-		dy0 = dy0 - 1 - 3 * SQUISH_CONSTANT_3D;
-		dz0 = dz0 - 1 - 3 * SQUISH_CONSTANT_3D;
+		dx0 = dx0 - 1 - 3 * squishConstant;
+		dy0 = dy0 - 1 - 3 * squishConstant;
+		dz0 = dz0 - 1 - 3 * squishConstant;
 		attn0 = 2 - dx0 * dx0 - dy0 * dy0 - dz0 * dz0;
 		if (attn0 > 0) {
 			attn0 *= attn0;
@@ -648,9 +643,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 			if (aIsFurtherSide) { /* Both closest points on (1,1,1) side */
 
 				/* One of the two extra points is (1,1,1) */
-				dx_ext0 = dx0 - 1 - 3 * SQUISH_CONSTANT_3D;
-				dy_ext0 = dy0 - 1 - 3 * SQUISH_CONSTANT_3D;
-				dz_ext0 = dz0 - 1 - 3 * SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 1 - 3 * squishConstant;
+				dy_ext0 = dy0 - 1 - 3 * squishConstant;
+				dz_ext0 = dz0 - 1 - 3 * squishConstant;
 				xsv_ext0 = xsb + 1;
 				ysv_ext0 = ysb + 1;
 				zsv_ext0 = zsb + 1;
@@ -658,23 +653,23 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 				/* Other extra point is based on the shared axis. */
 				c = (int8_t)(aPoint & bPoint);
 				if ((c & 0x01) != 0) {
-					dx_ext1 = dx0 - 2 - 2 * SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 - 2 * SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 - 2 * SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 - 2 - 2 * squishConstant;
+					dy_ext1 = dy0 - 2 * squishConstant;
+					dz_ext1 = dz0 - 2 * squishConstant;
 					xsv_ext1 = xsb + 2;
 					ysv_ext1 = ysb;
 					zsv_ext1 = zsb;
 				} else if ((c & 0x02) != 0) {
-					dx_ext1 = dx0 - 2 * SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 - 2 - 2 * SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 - 2 * SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 - 2 * squishConstant;
+					dy_ext1 = dy0 - 2 - 2 * squishConstant;
+					dz_ext1 = dz0 - 2 * squishConstant;
 					xsv_ext1 = xsb;
 					ysv_ext1 = ysb + 2;
 					zsv_ext1 = zsb;
 				} else {
-					dx_ext1 = dx0 - 2 * SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 - 2 * SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 - 2 - 2 * SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 - 2 * squishConstant;
+					dy_ext1 = dy0 - 2 * squishConstant;
+					dz_ext1 = dz0 - 2 - 2 * squishConstant;
 					xsv_ext1 = xsb;
 					ysv_ext1 = ysb;
 					zsv_ext1 = zsb + 2;
@@ -692,23 +687,23 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 				/* Other extra point is based on the omitted axis. */
 				c = (int8_t)(aPoint | bPoint);
 				if ((c & 0x01) == 0) {
-					dx_ext1 = dx0 + 1 - SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 - 1 - SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 - 1 - SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 + 1 - squishConstant;
+					dy_ext1 = dy0 - 1 - squishConstant;
+					dz_ext1 = dz0 - 1 - squishConstant;
 					xsv_ext1 = xsb - 1;
 					ysv_ext1 = ysb + 1;
 					zsv_ext1 = zsb + 1;
 				} else if ((c & 0x02) == 0) {
-					dx_ext1 = dx0 - 1 - SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 + 1 - SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 - 1 - SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 - 1 - squishConstant;
+					dy_ext1 = dy0 + 1 - squishConstant;
+					dz_ext1 = dz0 - 1 - squishConstant;
 					xsv_ext1 = xsb + 1;
 					ysv_ext1 = ysb - 1;
 					zsv_ext1 = zsb + 1;
 				} else {
-					dx_ext1 = dx0 - 1 - SQUISH_CONSTANT_3D;
-					dy_ext1 = dy0 - 1 - SQUISH_CONSTANT_3D;
-					dz_ext1 = dz0 + 1 - SQUISH_CONSTANT_3D;
+					dx_ext1 = dx0 - 1 - squishConstant;
+					dy_ext1 = dy0 - 1 - squishConstant;
+					dz_ext1 = dz0 + 1 - squishConstant;
 					xsv_ext1 = xsb + 1;
 					ysv_ext1 = ysb + 1;
 					zsv_ext1 = zsb - 1;
@@ -725,32 +720,32 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 
 			/* One contribution is a permutation of (1,1,-1) */
 			if ((c1 & 0x01) == 0) {
-				dx_ext0 = dx0 + 1 - SQUISH_CONSTANT_3D;
-				dy_ext0 = dy0 - 1 - SQUISH_CONSTANT_3D;
-				dz_ext0 = dz0 - 1 - SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 + 1 - squishConstant;
+				dy_ext0 = dy0 - 1 - squishConstant;
+				dz_ext0 = dz0 - 1 - squishConstant;
 				xsv_ext0 = xsb - 1;
 				ysv_ext0 = ysb + 1;
 				zsv_ext0 = zsb + 1;
 			} else if ((c1 & 0x02) == 0) {
-				dx_ext0 = dx0 - 1 - SQUISH_CONSTANT_3D;
-				dy_ext0 = dy0 + 1 - SQUISH_CONSTANT_3D;
-				dz_ext0 = dz0 - 1 - SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 1 - squishConstant;
+				dy_ext0 = dy0 + 1 - squishConstant;
+				dz_ext0 = dz0 - 1 - squishConstant;
 				xsv_ext0 = xsb + 1;
 				ysv_ext0 = ysb - 1;
 				zsv_ext0 = zsb + 1;
 			} else {
-				dx_ext0 = dx0 - 1 - SQUISH_CONSTANT_3D;
-				dy_ext0 = dy0 - 1 - SQUISH_CONSTANT_3D;
-				dz_ext0 = dz0 + 1 - SQUISH_CONSTANT_3D;
+				dx_ext0 = dx0 - 1 - squishConstant;
+				dy_ext0 = dy0 - 1 - squishConstant;
+				dz_ext0 = dz0 + 1 - squishConstant;
 				xsv_ext0 = xsb + 1;
 				ysv_ext0 = ysb + 1;
 				zsv_ext0 = zsb - 1;
 			}
 
 			/* One contribution is a permutation of (0,0,2) */
-			dx_ext1 = dx0 - 2 * SQUISH_CONSTANT_3D;
-			dy_ext1 = dy0 - 2 * SQUISH_CONSTANT_3D;
-			dz_ext1 = dz0 - 2 * SQUISH_CONSTANT_3D;
+			dx_ext1 = dx0 - 2 * squishConstant;
+			dy_ext1 = dy0 - 2 * squishConstant;
+			dz_ext1 = dz0 - 2 * squishConstant;
 			xsv_ext1 = xsb;
 			ysv_ext1 = ysb;
 			zsv_ext1 = zsb;
@@ -767,9 +762,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (1,0,0) */
-		dx1 = dx0 - 1 - SQUISH_CONSTANT_3D;
-		dy1 = dy0 - 0 - SQUISH_CONSTANT_3D;
-		dz1 = dz0 - 0 - SQUISH_CONSTANT_3D;
+		dx1 = dx0 - 1 - squishConstant;
+		dy1 = dy0 - 0 - squishConstant;
+		dz1 = dz0 - 0 - squishConstant;
 		attn1 = 2 - dx1 * dx1 - dy1 * dy1 - dz1 * dz1;
 		if (attn1 > 0) {
 			attn1 *= attn1;
@@ -777,8 +772,8 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (0,1,0) */
-		dx2 = dx0 - 0 - SQUISH_CONSTANT_3D;
-		dy2 = dy0 - 1 - SQUISH_CONSTANT_3D;
+		dx2 = dx0 - 0 - squishConstant;
+		dy2 = dy0 - 1 - squishConstant;
 		dz2 = dz1;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2;
 		if (attn2 > 0) {
@@ -789,7 +784,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		/* Contribution (0,0,1) */
 		dx3 = dx2;
 		dy3 = dy1;
-		dz3 = dz0 - 1 - SQUISH_CONSTANT_3D;
+		dz3 = dz0 - 1 - squishConstant;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3;
 		if (attn3 > 0) {
 			attn3 *= attn3;
@@ -797,9 +792,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (1,1,0) */
-		dx4 = dx0 - 1 - 2 * SQUISH_CONSTANT_3D;
-		dy4 = dy0 - 1 - 2 * SQUISH_CONSTANT_3D;
-		dz4 = dz0 - 0 - 2 * SQUISH_CONSTANT_3D;
+		dx4 = dx0 - 1 - 2 * squishConstant;
+		dy4 = dy0 - 1 - 2 * squishConstant;
+		dz4 = dz0 - 0 - 2 * squishConstant;
 		attn4 = 2 - dx4 * dx4 - dy4 * dy4 - dz4 * dz4;
 		if (attn4 > 0) {
 			attn4 *= attn4;
@@ -808,8 +803,8 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 
 		/* Contribution (1,0,1) */
 		dx5 = dx4;
-		dy5 = dy0 - 0 - 2 * SQUISH_CONSTANT_3D;
-		dz5 = dz0 - 1 - 2 * SQUISH_CONSTANT_3D;
+		dy5 = dy0 - 0 - 2 * squishConstant;
+		dz5 = dz0 - 1 - 2 * squishConstant;
 		attn5 = 2 - dx5 * dx5 - dy5 * dy5 - dz5 * dz5;
 		if (attn5 > 0) {
 			attn5 *= attn5;
@@ -817,7 +812,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		}
 
 		/* Contribution (0,1,1) */
-		dx6 = dx0 - 0 - 2 * SQUISH_CONSTANT_3D;
+		dx6 = dx0 - 0 - 2 * squishConstant;
 		dy6 = dy4;
 		dz6 = dz5;
 		attn6 = 2 - dx6 * dx6 - dy6 * dy6 - dz6 * dz6;
@@ -843,7 +838,7 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 		value += attn_ext1 * attn_ext1 * extrapolate3(ctx, xsv_ext1, ysv_ext1, zsv_ext1, dx_ext1, dy_ext1, dz_ext1);
 	}
 	
-	return value / NORM_CONSTANT_3D;
+	return value / normConstant;
 }
 	
 /* 
@@ -851,6 +846,10 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
  */
 float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, float w)
 {
+    const float stretchConstant = -0.138196601125011f;    /* (1 / sqrt(4 + 1) - 1) / 4; */
+    const float squishConstant = 0.309016994374947f;     /* (sqrt(4 + 1) - 1) / 4; */
+    const float normConstant = 30.0f;
+
 	float uins;
 	float dx1, dy1, dz1, dw1;
 	float dx2, dy2, dz2, dw2;
@@ -874,7 +873,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 	float score;
 
 	/* Place input coordinates on simplectic honeycomb. */
-	float stretchOffset = (x + y + z + w) * STRETCH_CONSTANT_4D;
+	float stretchOffset = (x + y + z + w) * stretchConstant;
 	float xs = x + stretchOffset;
 	float ys = y + stretchOffset;
 	float zs = z + stretchOffset;
@@ -887,7 +886,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 	int wsb = floor(ws);
 	
 	/* Skew out to get actual coordinates of stretched rhombo-hypercube origin. We'll need these later. */
-	float squishOffset = (xsb + ysb + zsb + wsb) * SQUISH_CONSTANT_4D;
+	float squishOffset = (xsb + ysb + zsb + wsb) * squishConstant;
 	float xb = xsb + squishOffset;
 	float yb = ysb + squishOffset;
 	float zb = zsb + squishOffset;
@@ -1004,19 +1003,19 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			if ((c & 0x01) == 0) {
 				xsv_ext0 = xsv_ext2 = xsb;
 				xsv_ext1 = xsb - 1;
-				dx_ext0 = dx0 - 2 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx0 + 1 - SQUISH_CONSTANT_4D;
-				dx_ext2 = dx0 - SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 2 * squishConstant;
+				dx_ext1 = dx0 + 1 - squishConstant;
+				dx_ext2 = dx0 - squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsv_ext2 = xsb + 1;
-				dx_ext0 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx_ext2 = dx0 - 1 - SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 1 - 2 * squishConstant;
+				dx_ext1 = dx_ext2 = dx0 - 1 - squishConstant;
 			}
 			
 			if ((c & 0x02) == 0) {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb;
-				dy_ext0 = dy0 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext1 = dy_ext2 = dy0 - SQUISH_CONSTANT_4D;
+				dy_ext0 = dy0 - 2 * squishConstant;
+				dy_ext1 = dy_ext2 = dy0 - squishConstant;
 				if ((c & 0x01) == 0x01) {
 					ysv_ext1 -= 1;
 					dy_ext1 += 1;
@@ -1026,14 +1025,14 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb + 1;
-				dy_ext0 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext1 = dy_ext2 = dy0 - 1 - SQUISH_CONSTANT_4D;
+				dy_ext0 = dy0 - 1 - 2 * squishConstant;
+				dy_ext1 = dy_ext2 = dy0 - 1 - squishConstant;
 			}
 			
 			if ((c & 0x04) == 0) {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb;
-				dz_ext0 = dz0 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext1 = dz_ext2 = dz0 - SQUISH_CONSTANT_4D;
+				dz_ext0 = dz0 - 2 * squishConstant;
+				dz_ext1 = dz_ext2 = dz0 - squishConstant;
 				if ((c & 0x03) == 0x03) {
 					zsv_ext1 -= 1;
 					dz_ext1 += 1;
@@ -1043,20 +1042,20 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb + 1;
-				dz_ext0 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext1 = dz_ext2 = dz0 - 1 - SQUISH_CONSTANT_4D;
+				dz_ext0 = dz0 - 1 - 2 * squishConstant;
+				dz_ext1 = dz_ext2 = dz0 - 1 - squishConstant;
 			}
 			
 			if ((c & 0x08) == 0) {
 				wsv_ext0 = wsv_ext1 = wsb;
 				wsv_ext2 = wsb - 1;
-				dw_ext0 = dw0 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw0 - SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 + 1 - SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - 2 * squishConstant;
+				dw_ext1 = dw0 - squishConstant;
+				dw_ext2 = dw0 + 1 - squishConstant;
 			} else {
 				wsv_ext0 = wsv_ext1 = wsv_ext2 = wsb + 1;
-				dw_ext0 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw_ext2 = dw0 - 1 - SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - 1 - 2 * squishConstant;
+				dw_ext1 = dw_ext2 = dw0 - 1 - squishConstant;
 			}
 		}
 
@@ -1068,10 +1067,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (1,0,0,0) */
-		dx1 = dx0 - 1 - SQUISH_CONSTANT_4D;
-		dy1 = dy0 - 0 - SQUISH_CONSTANT_4D;
-		dz1 = dz0 - 0 - SQUISH_CONSTANT_4D;
-		dw1 = dw0 - 0 - SQUISH_CONSTANT_4D;
+		dx1 = dx0 - 1 - squishConstant;
+		dy1 = dy0 - 0 - squishConstant;
+		dz1 = dz0 - 0 - squishConstant;
+		dw1 = dw0 - 0 - squishConstant;
 		attn1 = 2 - dx1 * dx1 - dy1 * dy1 - dz1 * dz1 - dw1 * dw1;
 		if (attn1 > 0) {
 			attn1 *= attn1;
@@ -1079,8 +1078,8 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (0,1,0,0) */
-		dx2 = dx0 - 0 - SQUISH_CONSTANT_4D;
-		dy2 = dy0 - 1 - SQUISH_CONSTANT_4D;
+		dx2 = dx0 - 0 - squishConstant;
+		dy2 = dy0 - 1 - squishConstant;
 		dz2 = dz1;
 		dw2 = dw1;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2 - dw2 * dw2;
@@ -1092,7 +1091,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		/* Contribution (0,0,1,0) */
 		dx3 = dx2;
 		dy3 = dy1;
-		dz3 = dz0 - 1 - SQUISH_CONSTANT_4D;
+		dz3 = dz0 - 1 - squishConstant;
 		dw3 = dw1;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3 - dw3 * dw3;
 		if (attn3 > 0) {
@@ -1104,7 +1103,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		dx4 = dx2;
 		dy4 = dy1;
 		dz4 = dz1;
-		dw4 = dw0 - 1 - SQUISH_CONSTANT_4D;
+		dw4 = dw0 - 1 - squishConstant;
 		attn4 = 2 - dx4 * dx4 - dy4 * dy4 - dz4 * dz4 - dw4 * dw4;
 		if (attn4 > 0) {
 			attn4 *= attn4;
@@ -1140,16 +1139,16 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			if ((c & 0x01) != 0) {
 				xsv_ext0 = xsb + 2;
 				xsv_ext1 = xsv_ext2 = xsb + 1;
-				dx_ext0 = dx0 - 2 - 4 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx_ext2 = dx0 - 1 - 4 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 2 - 4 * squishConstant;
+				dx_ext1 = dx_ext2 = dx0 - 1 - 4 * squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsv_ext2 = xsb;
-				dx_ext0 = dx_ext1 = dx_ext2 = dx0 - 4 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx_ext1 = dx_ext2 = dx0 - 4 * squishConstant;
 			}
 
 			if ((c & 0x02) != 0) {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb + 1;
-				dy_ext0 = dy_ext1 = dy_ext2 = dy0 - 1 - 4 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy_ext2 = dy0 - 1 - 4 * squishConstant;
 				if ((c & 0x01) != 0) {
 					ysv_ext1 += 1;
 					dy_ext1 -= 1;
@@ -1159,12 +1158,12 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb;
-				dy_ext0 = dy_ext1 = dy_ext2 = dy0 - 4 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy_ext2 = dy0 - 4 * squishConstant;
 			}
 			
 			if ((c & 0x04) != 0) {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb + 1;
-				dz_ext0 = dz_ext1 = dz_ext2 = dz0 - 1 - 4 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz_ext2 = dz0 - 1 - 4 * squishConstant;
 				if ((c & 0x03) != 0x03) {
 					if ((c & 0x03) == 0) {
 						zsv_ext0 += 1;
@@ -1179,17 +1178,17 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb;
-				dz_ext0 = dz_ext1 = dz_ext2 = dz0 - 4 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz_ext2 = dz0 - 4 * squishConstant;
 			}
 			
 			if ((c & 0x08) != 0) {
 				wsv_ext0 = wsv_ext1 = wsb + 1;
 				wsv_ext2 = wsb + 2;
-				dw_ext0 = dw_ext1 = dw0 - 1 - 4 * SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 - 2 - 4 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw_ext1 = dw0 - 1 - 4 * squishConstant;
+				dw_ext2 = dw0 - 2 - 4 * squishConstant;
 			} else {
 				wsv_ext0 = wsv_ext1 = wsv_ext2 = wsb;
-				dw_ext0 = dw_ext1 = dw_ext2 = dw0 - 4 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw_ext1 = dw_ext2 = dw0 - 4 * squishConstant;
 			}
 		} else { /* (1,1,1,1) is not one of the closest two pentachoron vertices. */
 			c = (int8_t)(aPoint & bPoint); /* Our three extra vertices are determined by the closest two. */
@@ -1197,19 +1196,19 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			if ((c & 0x01) != 0) {
 				xsv_ext0 = xsv_ext2 = xsb + 1;
 				xsv_ext1 = xsb + 2;
-				dx_ext0 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx0 - 2 - 3 * SQUISH_CONSTANT_4D;
-				dx_ext2 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 1 - 2 * squishConstant;
+				dx_ext1 = dx0 - 2 - 3 * squishConstant;
+				dx_ext2 = dx0 - 1 - 3 * squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsv_ext2 = xsb;
-				dx_ext0 = dx0 - 2 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx_ext2 = dx0 - 3 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 2 * squishConstant;
+				dx_ext1 = dx_ext2 = dx0 - 3 * squishConstant;
 			}
 			
 			if ((c & 0x02) != 0) {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb + 1;
-				dy_ext0 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext1 = dy_ext2 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy0 - 1 - 2 * squishConstant;
+				dy_ext1 = dy_ext2 = dy0 - 1 - 3 * squishConstant;
 				if ((c & 0x01) != 0) {
 					ysv_ext2 += 1;
 					dy_ext2 -= 1;
@@ -1219,14 +1218,14 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysv_ext2 = ysb;
-				dy_ext0 = dy0 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext1 = dy_ext2 = dy0 - 3 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy0 - 2 * squishConstant;
+				dy_ext1 = dy_ext2 = dy0 - 3 * squishConstant;
 			}
 			
 			if ((c & 0x04) != 0) {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb + 1;
-				dz_ext0 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext1 = dz_ext2 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz0 - 1 - 2 * squishConstant;
+				dz_ext1 = dz_ext2 = dz0 - 1 - 3 * squishConstant;
 				if ((c & 0x03) != 0) {
 					zsv_ext2 += 1;
 					dz_ext2 -= 1;
@@ -1236,28 +1235,28 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				zsv_ext0 = zsv_ext1 = zsv_ext2 = zsb;
-				dz_ext0 = dz0 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext1 = dz_ext2 = dz0 - 3 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz0 - 2 * squishConstant;
+				dz_ext1 = dz_ext2 = dz0 - 3 * squishConstant;
 			}
 			
 			if ((c & 0x08) != 0) {
 				wsv_ext0 = wsv_ext1 = wsb + 1;
 				wsv_ext2 = wsb + 2;
-				dw_ext0 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 - 2 - 3 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - 1 - 2 * squishConstant;
+				dw_ext1 = dw0 - 1 - 3 * squishConstant;
+				dw_ext2 = dw0 - 2 - 3 * squishConstant;
 			} else {
 				wsv_ext0 = wsv_ext1 = wsv_ext2 = wsb;
-				dw_ext0 = dw0 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw_ext2 = dw0 - 3 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - 2 * squishConstant;
+				dw_ext1 = dw_ext2 = dw0 - 3 * squishConstant;
 			}
 		}
 
 		/* Contribution (1,1,1,0) */
-		dx4 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dy4 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dz4 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dw4 = dw0 - 3 * SQUISH_CONSTANT_4D;
+		dx4 = dx0 - 1 - 3 * squishConstant;
+		dy4 = dy0 - 1 - 3 * squishConstant;
+		dz4 = dz0 - 1 - 3 * squishConstant;
+		dw4 = dw0 - 3 * squishConstant;
 		attn4 = 2 - dx4 * dx4 - dy4 * dy4 - dz4 * dz4 - dw4 * dw4;
 		if (attn4 > 0) {
 			attn4 *= attn4;
@@ -1267,8 +1266,8 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		/* Contribution (1,1,0,1) */
 		dx3 = dx4;
 		dy3 = dy4;
-		dz3 = dz0 - 3 * SQUISH_CONSTANT_4D;
-		dw3 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
+		dz3 = dz0 - 3 * squishConstant;
+		dw3 = dw0 - 1 - 3 * squishConstant;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3 - dw3 * dw3;
 		if (attn3 > 0) {
 			attn3 *= attn3;
@@ -1277,7 +1276,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 
 		/* Contribution (1,0,1,1) */
 		dx2 = dx4;
-		dy2 = dy0 - 3 * SQUISH_CONSTANT_4D;
+		dy2 = dy0 - 3 * squishConstant;
 		dz2 = dz4;
 		dw2 = dw3;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2 - dw2 * dw2;
@@ -1287,7 +1286,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (0,1,1,1) */
-		dx1 = dx0 - 3 * SQUISH_CONSTANT_4D;
+		dx1 = dx0 - 3 * squishConstant;
 		dz1 = dz4;
 		dy1 = dy4;
 		dw1 = dw3;
@@ -1298,10 +1297,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (1,1,1,1) */
-		dx0 = dx0 - 1 - 4 * SQUISH_CONSTANT_4D;
-		dy0 = dy0 - 1 - 4 * SQUISH_CONSTANT_4D;
-		dz0 = dz0 - 1 - 4 * SQUISH_CONSTANT_4D;
-		dw0 = dw0 - 1 - 4 * SQUISH_CONSTANT_4D;
+		dx0 = dx0 - 1 - 4 * squishConstant;
+		dy0 = dy0 - 1 - 4 * squishConstant;
+		dz0 = dz0 - 1 - 4 * squishConstant;
+		dw0 = dw0 - 1 - 4 * squishConstant;
 		attn0 = 2 - dx0 * dx0 - dy0 * dy0 - dz0 * dz0 - dw0 * dw0;
 		if (attn0 > 0) {
 			attn0 *= attn0;
@@ -1406,45 +1405,45 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				if ((c1 & 0x01) == 0) {
 					xsv_ext0 = xsb;
 					xsv_ext1 = xsb - 1;
-					dx_ext0 = dx0 - 3 * SQUISH_CONSTANT_4D;
-					dx_ext1 = dx0 + 1 - 2 * SQUISH_CONSTANT_4D;
+					dx_ext0 = dx0 - 3 * squishConstant;
+					dx_ext1 = dx0 + 1 - 2 * squishConstant;
 				} else {
 					xsv_ext0 = xsv_ext1 = xsb + 1;
-					dx_ext0 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
-					dx_ext1 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
+					dx_ext0 = dx0 - 1 - 3 * squishConstant;
+					dx_ext1 = dx0 - 1 - 2 * squishConstant;
 				}
 				
 				if ((c1 & 0x02) == 0) {
 					ysv_ext0 = ysb;
 					ysv_ext1 = ysb - 1;
-					dy_ext0 = dy0 - 3 * SQUISH_CONSTANT_4D;
-					dy_ext1 = dy0 + 1 - 2 * SQUISH_CONSTANT_4D;
+					dy_ext0 = dy0 - 3 * squishConstant;
+					dy_ext1 = dy0 + 1 - 2 * squishConstant;
 				} else {
 					ysv_ext0 = ysv_ext1 = ysb + 1;
-					dy_ext0 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
-					dy_ext1 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
+					dy_ext0 = dy0 - 1 - 3 * squishConstant;
+					dy_ext1 = dy0 - 1 - 2 * squishConstant;
 				}
 				
 				if ((c1 & 0x04) == 0) {
 					zsv_ext0 = zsb;
 					zsv_ext1 = zsb - 1;
-					dz_ext0 = dz0 - 3 * SQUISH_CONSTANT_4D;
-					dz_ext1 = dz0 + 1 - 2 * SQUISH_CONSTANT_4D;
+					dz_ext0 = dz0 - 3 * squishConstant;
+					dz_ext1 = dz0 + 1 - 2 * squishConstant;
 				} else {
 					zsv_ext0 = zsv_ext1 = zsb + 1;
-					dz_ext0 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
-					dz_ext1 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
+					dz_ext0 = dz0 - 1 - 3 * squishConstant;
+					dz_ext1 = dz0 - 1 - 2 * squishConstant;
 				}
 				
 				if ((c1 & 0x08) == 0) {
 					wsv_ext0 = wsb;
 					wsv_ext1 = wsb - 1;
-					dw_ext0 = dw0 - 3 * SQUISH_CONSTANT_4D;
-					dw_ext1 = dw0 + 1 - 2 * SQUISH_CONSTANT_4D;
+					dw_ext0 = dw0 - 3 * squishConstant;
+					dw_ext1 = dw0 + 1 - 2 * squishConstant;
 				} else {
 					wsv_ext0 = wsv_ext1 = wsb + 1;
-					dw_ext0 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
-					dw_ext1 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+					dw_ext0 = dw0 - 1 - 3 * squishConstant;
+					dw_ext1 = dw0 - 1 - 2 * squishConstant;
 				}
 				
 				/* One combination is a permutation of (0,0,0,2) based on c2 */
@@ -1452,10 +1451,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				ysv_ext2 = ysb;
 				zsv_ext2 = zsb;
 				wsv_ext2 = wsb;
-				dx_ext2 = dx0 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext2 = dy0 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext2 = dz0 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 - 2 * SQUISH_CONSTANT_4D;
+				dx_ext2 = dx0 - 2 * squishConstant;
+				dy_ext2 = dy0 - 2 * squishConstant;
+				dz_ext2 = dz0 - 2 * squishConstant;
+				dw_ext2 = dw0 - 2 * squishConstant;
 				if ((c2 & 0x01) != 0) {
 					xsv_ext2 += 2;
 					dx_ext2 -= 2;
@@ -1487,16 +1486,16 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				if ((c & 0x01) == 0) {
 					xsv_ext0 = xsb - 1;
 					xsv_ext1 = xsb;
-					dx_ext0 = dx0 + 1 - SQUISH_CONSTANT_4D;
-					dx_ext1 = dx0 - SQUISH_CONSTANT_4D;
+					dx_ext0 = dx0 + 1 - squishConstant;
+					dx_ext1 = dx0 - squishConstant;
 				} else {
 					xsv_ext0 = xsv_ext1 = xsb + 1;
-					dx_ext0 = dx_ext1 = dx0 - 1 - SQUISH_CONSTANT_4D;
+					dx_ext0 = dx_ext1 = dx0 - 1 - squishConstant;
 				}
 				
 				if ((c & 0x02) == 0) {
 					ysv_ext0 = ysv_ext1 = ysb;
-					dy_ext0 = dy_ext1 = dy0 - SQUISH_CONSTANT_4D;
+					dy_ext0 = dy_ext1 = dy0 - squishConstant;
 					if ((c & 0x01) == 0x01)
 					{
 						ysv_ext0 -= 1;
@@ -1507,12 +1506,12 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 					}
 				} else {
 					ysv_ext0 = ysv_ext1 = ysb + 1;
-					dy_ext0 = dy_ext1 = dy0 - 1 - SQUISH_CONSTANT_4D;
+					dy_ext0 = dy_ext1 = dy0 - 1 - squishConstant;
 				}
 				
 				if ((c & 0x04) == 0) {
 					zsv_ext0 = zsv_ext1 = zsb;
-					dz_ext0 = dz_ext1 = dz0 - SQUISH_CONSTANT_4D;
+					dz_ext0 = dz_ext1 = dz0 - squishConstant;
 					if ((c & 0x03) == 0x03)
 					{
 						zsv_ext0 -= 1;
@@ -1523,18 +1522,18 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 					}
 				} else {
 					zsv_ext0 = zsv_ext1 = zsb + 1;
-					dz_ext0 = dz_ext1 = dz0 - 1 - SQUISH_CONSTANT_4D;
+					dz_ext0 = dz_ext1 = dz0 - 1 - squishConstant;
 				}
 				
 				if ((c & 0x08) == 0)
 				{
 					wsv_ext0 = wsb;
 					wsv_ext1 = wsb - 1;
-					dw_ext0 = dw0 - SQUISH_CONSTANT_4D;
-					dw_ext1 = dw0 + 1 - SQUISH_CONSTANT_4D;
+					dw_ext0 = dw0 - squishConstant;
+					dw_ext1 = dw0 + 1 - squishConstant;
 				} else {
 					wsv_ext0 = wsv_ext1 = wsb + 1;
-					dw_ext0 = dw_ext1 = dw0 - 1 - SQUISH_CONSTANT_4D;
+					dw_ext0 = dw_ext1 = dw0 - 1 - squishConstant;
 				}
 				
 			}
@@ -1551,16 +1550,16 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			if ((c1 & 0x01) == 0) {
 				xsv_ext0 = xsb - 1;
 				xsv_ext1 = xsb;
-				dx_ext0 = dx0 + 1 - SQUISH_CONSTANT_4D;
-				dx_ext1 = dx0 - SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 + 1 - squishConstant;
+				dx_ext1 = dx0 - squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsb + 1;
-				dx_ext0 = dx_ext1 = dx0 - 1 - SQUISH_CONSTANT_4D;
+				dx_ext0 = dx_ext1 = dx0 - 1 - squishConstant;
 			}
 			
 			if ((c1 & 0x02) == 0) {
 				ysv_ext0 = ysv_ext1 = ysb;
-				dy_ext0 = dy_ext1 = dy0 - SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy0 - squishConstant;
 				if ((c1 & 0x01) == 0x01) {
 					ysv_ext0 -= 1;
 					dy_ext0 += 1;
@@ -1570,12 +1569,12 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysb + 1;
-				dy_ext0 = dy_ext1 = dy0 - 1 - SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy0 - 1 - squishConstant;
 			}
 			
 			if ((c1 & 0x04) == 0) {
 				zsv_ext0 = zsv_ext1 = zsb;
-				dz_ext0 = dz_ext1 = dz0 - SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz0 - squishConstant;
 				if ((c1 & 0x03) == 0x03) {
 					zsv_ext0 -= 1;
 					dz_ext0 += 1;
@@ -1585,17 +1584,17 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				zsv_ext0 = zsv_ext1 = zsb + 1;
-				dz_ext0 = dz_ext1 = dz0 - 1 - SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz0 - 1 - squishConstant;
 			}
 			
 			if ((c1 & 0x08) == 0) {
 				wsv_ext0 = wsb;
 				wsv_ext1 = wsb - 1;
-				dw_ext0 = dw0 - SQUISH_CONSTANT_4D;
-				dw_ext1 = dw0 + 1 - SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - squishConstant;
+				dw_ext1 = dw0 + 1 - squishConstant;
 			} else {
 				wsv_ext0 = wsv_ext1 = wsb + 1;
-				dw_ext0 = dw_ext1 = dw0 - 1 - SQUISH_CONSTANT_4D;
+				dw_ext0 = dw_ext1 = dw0 - 1 - squishConstant;
 			}
 
 			/* One contribution is a permutation of (0,0,0,2) based on the smaller-sided point */
@@ -1603,10 +1602,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			ysv_ext2 = ysb;
 			zsv_ext2 = zsb;
 			wsv_ext2 = wsb;
-			dx_ext2 = dx0 - 2 * SQUISH_CONSTANT_4D;
-			dy_ext2 = dy0 - 2 * SQUISH_CONSTANT_4D;
-			dz_ext2 = dz0 - 2 * SQUISH_CONSTANT_4D;
-			dw_ext2 = dw0 - 2 * SQUISH_CONSTANT_4D;
+			dx_ext2 = dx0 - 2 * squishConstant;
+			dy_ext2 = dy0 - 2 * squishConstant;
+			dz_ext2 = dz0 - 2 * squishConstant;
+			dw_ext2 = dw0 - 2 * squishConstant;
 			if ((c2 & 0x01) != 0) {
 				xsv_ext2 += 2;
 				dx_ext2 -= 2;
@@ -1623,10 +1622,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,0,0,0) */
-		dx1 = dx0 - 1 - SQUISH_CONSTANT_4D;
-		dy1 = dy0 - 0 - SQUISH_CONSTANT_4D;
-		dz1 = dz0 - 0 - SQUISH_CONSTANT_4D;
-		dw1 = dw0 - 0 - SQUISH_CONSTANT_4D;
+		dx1 = dx0 - 1 - squishConstant;
+		dy1 = dy0 - 0 - squishConstant;
+		dz1 = dz0 - 0 - squishConstant;
+		dw1 = dw0 - 0 - squishConstant;
 		attn1 = 2 - dx1 * dx1 - dy1 * dy1 - dz1 * dz1 - dw1 * dw1;
 		if (attn1 > 0) {
 			attn1 *= attn1;
@@ -1634,8 +1633,8 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (0,1,0,0) */
-		dx2 = dx0 - 0 - SQUISH_CONSTANT_4D;
-		dy2 = dy0 - 1 - SQUISH_CONSTANT_4D;
+		dx2 = dx0 - 0 - squishConstant;
+		dy2 = dy0 - 1 - squishConstant;
 		dz2 = dz1;
 		dw2 = dw1;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2 - dw2 * dw2;
@@ -1647,7 +1646,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		/* Contribution (0,0,1,0) */
 		dx3 = dx2;
 		dy3 = dy1;
-		dz3 = dz0 - 1 - SQUISH_CONSTANT_4D;
+		dz3 = dz0 - 1 - squishConstant;
 		dw3 = dw1;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3 - dw3 * dw3;
 		if (attn3 > 0) {
@@ -1659,7 +1658,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		dx4 = dx2;
 		dy4 = dy1;
 		dz4 = dz1;
-		dw4 = dw0 - 1 - SQUISH_CONSTANT_4D;
+		dw4 = dw0 - 1 - squishConstant;
 		attn4 = 2 - dx4 * dx4 - dy4 * dy4 - dz4 * dz4 - dw4 * dw4;
 		if (attn4 > 0) {
 			attn4 *= attn4;
@@ -1667,10 +1666,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,1,0,0) */
-		dx5 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy5 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz5 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw5 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx5 = dx0 - 1 - 2 * squishConstant;
+		dy5 = dy0 - 1 - 2 * squishConstant;
+		dz5 = dz0 - 0 - 2 * squishConstant;
+		dw5 = dw0 - 0 - 2 * squishConstant;
 		attn5 = 2 - dx5 * dx5 - dy5 * dy5 - dz5 * dz5 - dw5 * dw5;
 		if (attn5 > 0) {
 			attn5 *= attn5;
@@ -1678,10 +1677,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,0,1,0) */
-		dx6 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy6 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz6 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw6 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx6 = dx0 - 1 - 2 * squishConstant;
+		dy6 = dy0 - 0 - 2 * squishConstant;
+		dz6 = dz0 - 1 - 2 * squishConstant;
+		dw6 = dw0 - 0 - 2 * squishConstant;
 		attn6 = 2 - dx6 * dx6 - dy6 * dy6 - dz6 * dz6 - dw6 * dw6;
 		if (attn6 > 0) {
 			attn6 *= attn6;
@@ -1689,10 +1688,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (1,0,0,1) */
-		dx7 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy7 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz7 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw7 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx7 = dx0 - 1 - 2 * squishConstant;
+		dy7 = dy0 - 0 - 2 * squishConstant;
+		dz7 = dz0 - 0 - 2 * squishConstant;
+		dw7 = dw0 - 1 - 2 * squishConstant;
 		attn7 = 2 - dx7 * dx7 - dy7 * dy7 - dz7 * dz7 - dw7 * dw7;
 		if (attn7 > 0) {
 			attn7 *= attn7;
@@ -1700,10 +1699,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,1,1,0) */
-		dx8 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy8 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz8 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw8 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx8 = dx0 - 0 - 2 * squishConstant;
+		dy8 = dy0 - 1 - 2 * squishConstant;
+		dz8 = dz0 - 1 - 2 * squishConstant;
+		dw8 = dw0 - 0 - 2 * squishConstant;
 		attn8 = 2 - dx8 * dx8 - dy8 * dy8 - dz8 * dz8 - dw8 * dw8;
 		if (attn8 > 0) {
 			attn8 *= attn8;
@@ -1711,10 +1710,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,1,0,1) */
-		dx9 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy9 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz9 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw9 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx9 = dx0 - 0 - 2 * squishConstant;
+		dy9 = dy0 - 1 - 2 * squishConstant;
+		dz9 = dz0 - 0 - 2 * squishConstant;
+		dw9 = dw0 - 1 - 2 * squishConstant;
 		attn9 = 2 - dx9 * dx9 - dy9 * dy9 - dz9 * dz9 - dw9 * dw9;
 		if (attn9 > 0) {
 			attn9 *= attn9;
@@ -1722,10 +1721,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,0,1,1) */
-		dx10 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy10 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz10 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw10 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx10 = dx0 - 0 - 2 * squishConstant;
+		dy10 = dy0 - 0 - 2 * squishConstant;
+		dz10 = dz0 - 1 - 2 * squishConstant;
+		dw10 = dw0 - 1 - 2 * squishConstant;
 		attn10 = 2 - dx10 * dx10 - dy10 * dy10 - dz10 * dz10 - dw10 * dw10;
 		if (attn10 > 0) {
 			attn10 *= attn10;
@@ -1833,14 +1832,14 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				ysv_ext0 = ysv_ext1 = ysb;
 				zsv_ext0 = zsv_ext1 = zsb;
 				wsv_ext0 = wsv_ext1 = wsb;
-				dx_ext0 = dx0 - SQUISH_CONSTANT_4D;
-				dy_ext0 = dy0 - SQUISH_CONSTANT_4D;
-				dz_ext0 = dz0 - SQUISH_CONSTANT_4D;
-				dw_ext0 = dw0 - SQUISH_CONSTANT_4D;
-				dx_ext1 = dx0 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext1 = dy0 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext1 = dz0 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw0 - 2 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - squishConstant;
+				dy_ext0 = dy0 - squishConstant;
+				dz_ext0 = dz0 - squishConstant;
+				dw_ext0 = dw0 - squishConstant;
+				dx_ext1 = dx0 - 2 * squishConstant;
+				dy_ext1 = dy0 - 2 * squishConstant;
+				dz_ext1 = dz0 - 2 * squishConstant;
+				dw_ext1 = dw0 - 2 * squishConstant;
 				if ((c1 & 0x01) != 0) {
 					xsv_ext0 += 1;
 					dx_ext0 -= 1;
@@ -1868,10 +1867,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				ysv_ext2 = ysb + 1;
 				zsv_ext2 = zsb + 1;
 				wsv_ext2 = wsb + 1;
-				dx_ext2 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dy_ext2 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dz_ext2 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+				dx_ext2 = dx0 - 1 - 2 * squishConstant;
+				dy_ext2 = dy0 - 1 - 2 * squishConstant;
+				dz_ext2 = dz0 - 1 - 2 * squishConstant;
+				dw_ext2 = dw0 - 1 - 2 * squishConstant;
 				if ((c2 & 0x01) == 0) {
 					xsv_ext2 -= 2;
 					dx_ext2 += 2;
@@ -1891,10 +1890,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				ysv_ext2 = ysb + 1;
 				zsv_ext2 = zsb + 1;
 				wsv_ext2 = wsb + 1;
-				dx_ext2 = dx0 - 1 - 4 * SQUISH_CONSTANT_4D;
-				dy_ext2 = dy0 - 1 - 4 * SQUISH_CONSTANT_4D;
-				dz_ext2 = dz0 - 1 - 4 * SQUISH_CONSTANT_4D;
-				dw_ext2 = dw0 - 1 - 4 * SQUISH_CONSTANT_4D;
+				dx_ext2 = dx0 - 1 - 4 * squishConstant;
+				dy_ext2 = dy0 - 1 - 4 * squishConstant;
+				dz_ext2 = dz0 - 1 - 4 * squishConstant;
+				dw_ext2 = dw0 - 1 - 4 * squishConstant;
 				
 				/* Other two points are based on the shared axes. */
 				c = (int8_t)(aPoint & bPoint);
@@ -1902,16 +1901,16 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				if ((c & 0x01) != 0) {
 					xsv_ext0 = xsb + 2;
 					xsv_ext1 = xsb + 1;
-					dx_ext0 = dx0 - 2 - 3 * SQUISH_CONSTANT_4D;
-					dx_ext1 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
+					dx_ext0 = dx0 - 2 - 3 * squishConstant;
+					dx_ext1 = dx0 - 1 - 3 * squishConstant;
 				} else {
 					xsv_ext0 = xsv_ext1 = xsb;
-					dx_ext0 = dx_ext1 = dx0 - 3 * SQUISH_CONSTANT_4D;
+					dx_ext0 = dx_ext1 = dx0 - 3 * squishConstant;
 				}
 				
 				if ((c & 0x02) != 0) {
 					ysv_ext0 = ysv_ext1 = ysb + 1;
-					dy_ext0 = dy_ext1 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
+					dy_ext0 = dy_ext1 = dy0 - 1 - 3 * squishConstant;
 					if ((c & 0x01) == 0)
 					{
 						ysv_ext0 += 1;
@@ -1922,12 +1921,12 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 					}
 				} else {
 					ysv_ext0 = ysv_ext1 = ysb;
-					dy_ext0 = dy_ext1 = dy0 - 3 * SQUISH_CONSTANT_4D;
+					dy_ext0 = dy_ext1 = dy0 - 3 * squishConstant;
 				}
 				
 				if ((c & 0x04) != 0) {
 					zsv_ext0 = zsv_ext1 = zsb + 1;
-					dz_ext0 = dz_ext1 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
+					dz_ext0 = dz_ext1 = dz0 - 1 - 3 * squishConstant;
 					if ((c & 0x03) == 0)
 					{
 						zsv_ext0 += 1;
@@ -1938,18 +1937,18 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 					}
 				} else {
 					zsv_ext0 = zsv_ext1 = zsb;
-					dz_ext0 = dz_ext1 = dz0 - 3 * SQUISH_CONSTANT_4D;
+					dz_ext0 = dz_ext1 = dz0 - 3 * squishConstant;
 				}
 				
 				if ((c & 0x08) != 0)
 				{
 					wsv_ext0 = wsb + 1;
 					wsv_ext1 = wsb + 2;
-					dw_ext0 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
-					dw_ext1 = dw0 - 2 - 3 * SQUISH_CONSTANT_4D;
+					dw_ext0 = dw0 - 1 - 3 * squishConstant;
+					dw_ext1 = dw0 - 2 - 3 * squishConstant;
 				} else {
 					wsv_ext0 = wsv_ext1 = wsb;
-					dw_ext0 = dw_ext1 = dw0 - 3 * SQUISH_CONSTANT_4D;
+					dw_ext0 = dw_ext1 = dw0 - 3 * squishConstant;
 				}
 			}
 		} else { /* One point on each "side" */
@@ -1965,16 +1964,16 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			if ((c1 & 0x01) != 0) {
 				xsv_ext0 = xsb + 2;
 				xsv_ext1 = xsb + 1;
-				dx_ext0 = dx0 - 2 - 3 * SQUISH_CONSTANT_4D;
-				dx_ext1 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx0 - 2 - 3 * squishConstant;
+				dx_ext1 = dx0 - 1 - 3 * squishConstant;
 			} else {
 				xsv_ext0 = xsv_ext1 = xsb;
-				dx_ext0 = dx_ext1 = dx0 - 3 * SQUISH_CONSTANT_4D;
+				dx_ext0 = dx_ext1 = dx0 - 3 * squishConstant;
 			}
 			
 			if ((c1 & 0x02) != 0) {
 				ysv_ext0 = ysv_ext1 = ysb + 1;
-				dy_ext0 = dy_ext1 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy0 - 1 - 3 * squishConstant;
 				if ((c1 & 0x01) == 0) {
 					ysv_ext0 += 1;
 					dy_ext0 -= 1;
@@ -1984,12 +1983,12 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				ysv_ext0 = ysv_ext1 = ysb;
-				dy_ext0 = dy_ext1 = dy0 - 3 * SQUISH_CONSTANT_4D;
+				dy_ext0 = dy_ext1 = dy0 - 3 * squishConstant;
 			}
 			
 			if ((c1 & 0x04) != 0) {
 				zsv_ext0 = zsv_ext1 = zsb + 1;
-				dz_ext0 = dz_ext1 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz0 - 1 - 3 * squishConstant;
 				if ((c1 & 0x03) == 0) {
 					zsv_ext0 += 1;
 					dz_ext0 -= 1;
@@ -1999,17 +1998,17 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 				}
 			} else {
 				zsv_ext0 = zsv_ext1 = zsb;
-				dz_ext0 = dz_ext1 = dz0 - 3 * SQUISH_CONSTANT_4D;
+				dz_ext0 = dz_ext1 = dz0 - 3 * squishConstant;
 			}
 			
 			if ((c1 & 0x08) != 0) {
 				wsv_ext0 = wsb + 1;
 				wsv_ext1 = wsb + 2;
-				dw_ext0 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
-				dw_ext1 = dw0 - 2 - 3 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw0 - 1 - 3 * squishConstant;
+				dw_ext1 = dw0 - 2 - 3 * squishConstant;
 			} else {
 				wsv_ext0 = wsv_ext1 = wsb;
-				dw_ext0 = dw_ext1 = dw0 - 3 * SQUISH_CONSTANT_4D;
+				dw_ext0 = dw_ext1 = dw0 - 3 * squishConstant;
 			}
 
 			/* One contribution is a permutation of (1,1,1,-1) based on the smaller-sided point */
@@ -2017,10 +2016,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 			ysv_ext2 = ysb + 1;
 			zsv_ext2 = zsb + 1;
 			wsv_ext2 = wsb + 1;
-			dx_ext2 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-			dy_ext2 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-			dz_ext2 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-			dw_ext2 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+			dx_ext2 = dx0 - 1 - 2 * squishConstant;
+			dy_ext2 = dy0 - 1 - 2 * squishConstant;
+			dz_ext2 = dz0 - 1 - 2 * squishConstant;
+			dw_ext2 = dw0 - 1 - 2 * squishConstant;
 			if ((c2 & 0x01) == 0) {
 				xsv_ext2 -= 2;
 				dx_ext2 += 2;
@@ -2037,10 +2036,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,1,1,0) */
-		dx4 = dx0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dy4 = dy0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dz4 = dz0 - 1 - 3 * SQUISH_CONSTANT_4D;
-		dw4 = dw0 - 3 * SQUISH_CONSTANT_4D;
+		dx4 = dx0 - 1 - 3 * squishConstant;
+		dy4 = dy0 - 1 - 3 * squishConstant;
+		dz4 = dz0 - 1 - 3 * squishConstant;
+		dw4 = dw0 - 3 * squishConstant;
 		attn4 = 2 - dx4 * dx4 - dy4 * dy4 - dz4 * dz4 - dw4 * dw4;
 		if (attn4 > 0) {
 			attn4 *= attn4;
@@ -2050,8 +2049,8 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		/* Contribution (1,1,0,1) */
 		dx3 = dx4;
 		dy3 = dy4;
-		dz3 = dz0 - 3 * SQUISH_CONSTANT_4D;
-		dw3 = dw0 - 1 - 3 * SQUISH_CONSTANT_4D;
+		dz3 = dz0 - 3 * squishConstant;
+		dw3 = dw0 - 1 - 3 * squishConstant;
 		attn3 = 2 - dx3 * dx3 - dy3 * dy3 - dz3 * dz3 - dw3 * dw3;
 		if (attn3 > 0) {
 			attn3 *= attn3;
@@ -2060,7 +2059,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 
 		/* Contribution (1,0,1,1) */
 		dx2 = dx4;
-		dy2 = dy0 - 3 * SQUISH_CONSTANT_4D;
+		dy2 = dy0 - 3 * squishConstant;
 		dz2 = dz4;
 		dw2 = dw3;
 		attn2 = 2 - dx2 * dx2 - dy2 * dy2 - dz2 * dz2 - dw2 * dw2;
@@ -2070,7 +2069,7 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (0,1,1,1) */
-		dx1 = dx0 - 3 * SQUISH_CONSTANT_4D;
+		dx1 = dx0 - 3 * squishConstant;
 		dz1 = dz4;
 		dy1 = dy4;
 		dw1 = dw3;
@@ -2081,10 +2080,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,1,0,0) */
-		dx5 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy5 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz5 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw5 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx5 = dx0 - 1 - 2 * squishConstant;
+		dy5 = dy0 - 1 - 2 * squishConstant;
+		dz5 = dz0 - 0 - 2 * squishConstant;
+		dw5 = dw0 - 0 - 2 * squishConstant;
 		attn5 = 2 - dx5 * dx5 - dy5 * dy5 - dz5 * dz5 - dw5 * dw5;
 		if (attn5 > 0) {
 			attn5 *= attn5;
@@ -2092,10 +2091,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (1,0,1,0) */
-		dx6 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy6 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz6 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw6 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx6 = dx0 - 1 - 2 * squishConstant;
+		dy6 = dy0 - 0 - 2 * squishConstant;
+		dz6 = dz0 - 1 - 2 * squishConstant;
+		dw6 = dw0 - 0 - 2 * squishConstant;
 		attn6 = 2 - dx6 * dx6 - dy6 * dy6 - dz6 * dz6 - dw6 * dw6;
 		if (attn6 > 0) {
 			attn6 *= attn6;
@@ -2103,10 +2102,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 
 		/* Contribution (1,0,0,1) */
-		dx7 = dx0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dy7 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz7 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw7 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx7 = dx0 - 1 - 2 * squishConstant;
+		dy7 = dy0 - 0 - 2 * squishConstant;
+		dz7 = dz0 - 0 - 2 * squishConstant;
+		dw7 = dw0 - 1 - 2 * squishConstant;
 		attn7 = 2 - dx7 * dx7 - dy7 * dy7 - dz7 * dz7 - dw7 * dw7;
 		if (attn7 > 0) {
 			attn7 *= attn7;
@@ -2114,10 +2113,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,1,1,0) */
-		dx8 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy8 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz8 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw8 = dw0 - 0 - 2 * SQUISH_CONSTANT_4D;
+		dx8 = dx0 - 0 - 2 * squishConstant;
+		dy8 = dy0 - 1 - 2 * squishConstant;
+		dz8 = dz0 - 1 - 2 * squishConstant;
+		dw8 = dw0 - 0 - 2 * squishConstant;
 		attn8 = 2 - dx8 * dx8 - dy8 * dy8 - dz8 * dz8 - dw8 * dw8;
 		if (attn8 > 0) {
 			attn8 *= attn8;
@@ -2125,10 +2124,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,1,0,1) */
-		dx9 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy9 = dy0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dz9 = dz0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dw9 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx9 = dx0 - 0 - 2 * squishConstant;
+		dy9 = dy0 - 1 - 2 * squishConstant;
+		dz9 = dz0 - 0 - 2 * squishConstant;
+		dw9 = dw0 - 1 - 2 * squishConstant;
 		attn9 = 2 - dx9 * dx9 - dy9 * dy9 - dz9 * dz9 - dw9 * dw9;
 		if (attn9 > 0) {
 			attn9 *= attn9;
@@ -2136,10 +2135,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		}
 		
 		/* Contribution (0,0,1,1) */
-		dx10 = dx0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dy10 = dy0 - 0 - 2 * SQUISH_CONSTANT_4D;
-		dz10 = dz0 - 1 - 2 * SQUISH_CONSTANT_4D;
-		dw10 = dw0 - 1 - 2 * SQUISH_CONSTANT_4D;
+		dx10 = dx0 - 0 - 2 * squishConstant;
+		dy10 = dy0 - 0 - 2 * squishConstant;
+		dz10 = dz0 - 1 - 2 * squishConstant;
+		dw10 = dw0 - 1 - 2 * squishConstant;
 		attn10 = 2 - dx10 * dx10 - dy10 * dy10 - dz10 * dz10 - dw10 * dw10;
 		if (attn10 > 0) {
 			attn10 *= attn10;
@@ -2171,6 +2170,5 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 		value += attn_ext2 * attn_ext2 * extrapolate4(ctx, xsv_ext2, ysv_ext2, zsv_ext2, wsv_ext2, dx_ext2, dy_ext2, dz_ext2, dw_ext2);
 	}
 
-	return value / NORM_CONSTANT_4D;
+	return value / normConstant;
 }
-	
