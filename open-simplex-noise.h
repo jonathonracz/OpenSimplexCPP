@@ -29,8 +29,8 @@ struct osn_context {
 };
 
 int open_simplex_noise(int64_t seed, osn_context *ctx);
-double open_simplex_noise2(osn_context *ctx, double x, double y);
-double open_simplex_noise3(osn_context *ctx, double x, double y, double z);
-double open_simplex_noise4(osn_context *ctx, double x, double y, double z, double w);
+float open_simplex_noise2(osn_context *ctx, float x, float y);
+float open_simplex_noise3(osn_context *ctx, float x, float y, float z);
+float open_simplex_noise4(osn_context *ctx, float x, float y, float z, float w);
 
 //class 

@@ -89,7 +89,7 @@ static const signed char gradients4D[] = {
 	-3, -1, -1, -1,     -1, -3, -1, -1,     -1, -1, -3, -1,     -1, -1, -1, -3,
 };
 
-static double extrapolate2(osn_context *ctx, int xsb, int ysb, double dx, double dy)
+static float extrapolate2(osn_context *ctx, int xsb, int ysb, float dx, float dy)
 {
 	int16_t *perm = ctx->perm;	
 	int index = perm[(perm[xsb & 0xFF] + ysb) & 0xFF] & 0x0E;
@@ -97,7 +97,7 @@ static double extrapolate2(osn_context *ctx, int xsb, int ysb, double dx, double
 		+ gradients2D[index + 1] * dy;
 }
 	
-static double extrapolate3(osn_context *ctx, int xsb, int ysb, int zsb, double dx, double dy, double dz)
+static float extrapolate3(osn_context *ctx, int xsb, int ysb, int zsb, float dx, float dy, float dz)
 {
 	int16_t *perm = ctx->perm;	
 	int16_t *permGradIndex3D = ctx->permGradIndex3D;
@@ -107,7 +107,7 @@ static double extrapolate3(osn_context *ctx, int xsb, int ysb, int zsb, double d
 		+ gradients3D[index + 2] * dz;
 }
 	
-static double extrapolate4(osn_context *ctx, int xsb, int ysb, int zsb, int wsb, double dx, double dy, double dz, double dw)
+static float extrapolate4(osn_context *ctx, int xsb, int ysb, int zsb, int wsb, float dx, float dy, float dz, float dw)
 {
 	int16_t *perm = ctx->perm;
 	int index = perm[(perm[(perm[(perm[xsb & 0xFF] + ysb) & 0xFF] + zsb) & 0xFF] + wsb) & 0xFF] & 0xFC;
@@ -117,7 +117,7 @@ static double extrapolate4(osn_context *ctx, int xsb, int ysb, int zsb, int wsb,
 		+ gradients4D[index + 3] * dw;
 }
 	
-static int fastFloor(double x) {
+static int fastFloor(float x) {
 	int xi = (int) x;
 	return x < xi ? xi - 1 : xi;
 }
@@ -157,49 +157,49 @@ int open_simplex_noise(int64_t seed, osn_context *ctx)
 }
 	
 /* 2D OpenSimplex (Simplectic) Noise. */
-double open_simplex_noise2(struct osn_context *ctx, double x, double y) 
+float open_simplex_noise2(struct osn_context *ctx, float x, float y) 
 {
 	
 	/* Place input coordinates onto grid. */
-	double stretchOffset = (x + y) * STRETCH_CONSTANT_2D;
-	double xs = x + stretchOffset;
-	double ys = y + stretchOffset;
+	float stretchOffset = (x + y) * STRETCH_CONSTANT_2D;
+	float xs = x + stretchOffset;
+	float ys = y + stretchOffset;
 		
 	/* Floor to get grid coordinates of rhombus (stretched square) super-cell origin. */
 	int xsb = fastFloor(xs);
 	int ysb = fastFloor(ys);
 		
 	/* Skew out to get actual coordinates of rhombus origin. We'll need these later. */
-	double squishOffset = (xsb + ysb) * SQUISH_CONSTANT_2D;
-	double xb = xsb + squishOffset;
-	double yb = ysb + squishOffset;
+	float squishOffset = (xsb + ysb) * SQUISH_CONSTANT_2D;
+	float xb = xsb + squishOffset;
+	float yb = ysb + squishOffset;
 		
 	/* Compute grid coordinates relative to rhombus origin. */
-	double xins = xs - xsb;
-	double yins = ys - ysb;
+	float xins = xs - xsb;
+	float yins = ys - ysb;
 		
 	/* Sum those together to get a value that determines which region we're in. */
-	double inSum = xins + yins;
+	float inSum = xins + yins;
 
 	/* Positions relative to origin point. */
-	double dx0 = x - xb;
-	double dy0 = y - yb;
+	float dx0 = x - xb;
+	float dy0 = y - yb;
 		
 	/* We'll be defining these inside the next block and using them afterwards. */
-	double dx_ext, dy_ext;
+	float dx_ext, dy_ext;
 	int xsv_ext, ysv_ext;
 
-	double dx1;
-	double dy1;
-	double attn1;
-	double dx2;
-	double dy2;
-	double attn2;
-	double zins;
-	double attn0;
-	double attn_ext;
+	float dx1;
+	float dy1;
+	float attn1;
+	float dx2;
+	float dy2;
+	float attn2;
+	float zins;
+	float attn0;
+	float attn_ext;
 
-	double value = 0;
+	float value = 0;
 
 	/* Contribution (1,0) */
 	dx1 = dx0 - 1 - SQUISH_CONSTANT_2D;
@@ -285,14 +285,13 @@ double open_simplex_noise2(struct osn_context *ctx, double x, double y)
 /*
  * 3D OpenSimplex (Simplectic) Noise
  */
-double open_simplex_noise3(struct osn_context *ctx, double x, double y, double z)
+float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 {
-
 	/* Place input coordinates on simplectic honeycomb. */
-	double stretchOffset = (x + y + z) * STRETCH_CONSTANT_3D;
-	double xs = x + stretchOffset;
-	double ys = y + stretchOffset;
-	double zs = z + stretchOffset;
+	float stretchOffset = (x + y + z) * STRETCH_CONSTANT_3D;
+	float xs = x + stretchOffset;
+	float ys = y + stretchOffset;
+	float zs = z + stretchOffset;
 	
 	/* Floor to get simplectic honeycomb coordinates of rhombohedron (stretched cube) super-cell origin. */
 	int xsb = fastFloor(xs);
@@ -300,48 +299,48 @@ double open_simplex_noise3(struct osn_context *ctx, double x, double y, double z
 	int zsb = fastFloor(zs);
 	
 	/* Skew out to get actual coordinates of rhombohedron origin. We'll need these later. */
-	double squishOffset = (xsb + ysb + zsb) * SQUISH_CONSTANT_3D;
-	double xb = xsb + squishOffset;
-	double yb = ysb + squishOffset;
-	double zb = zsb + squishOffset;
+	float squishOffset = (xsb + ysb + zsb) * SQUISH_CONSTANT_3D;
+	float xb = xsb + squishOffset;
+	float yb = ysb + squishOffset;
+	float zb = zsb + squishOffset;
 	
 	/* Compute simplectic honeycomb coordinates relative to rhombohedral origin. */
-	double xins = xs - xsb;
-	double yins = ys - ysb;
-	double zins = zs - zsb;
+	float xins = xs - xsb;
+	float yins = ys - ysb;
+	float zins = zs - zsb;
 	
 	/* Sum those together to get a value that determines which region we're in. */
-	double inSum = xins + yins + zins;
+	float inSum = xins + yins + zins;
 
 	/* Positions relative to origin point. */
-	double dx0 = x - xb;
-	double dy0 = y - yb;
-	double dz0 = z - zb;
+	float dx0 = x - xb;
+	float dy0 = y - yb;
+	float dz0 = z - zb;
 	
 	/* We'll be defining these inside the next block and using them afterwards. */
-	double dx_ext0, dy_ext0, dz_ext0;
-	double dx_ext1, dy_ext1, dz_ext1;
+	float dx_ext0, dy_ext0, dz_ext0;
+	float dx_ext1, dy_ext1, dz_ext1;
 	int xsv_ext0, ysv_ext0, zsv_ext0;
 	int xsv_ext1, ysv_ext1, zsv_ext1;
 
-	double wins;
+	float wins;
 	int8_t c, c1, c2;
 	int8_t aPoint, bPoint;
-	double aScore, bScore;
+	float aScore, bScore;
 	int aIsFurtherSide;
 	int bIsFurtherSide;
-	double p1, p2, p3;
-	double score;
-	double attn0, attn1, attn2, attn3, attn4, attn5, attn6;
-	double dx1, dy1, dz1;
-	double dx2, dy2, dz2;
-	double dx3, dy3, dz3;
-	double dx4, dy4, dz4;
-	double dx5, dy5, dz5;
-	double dx6, dy6, dz6;
-	double attn_ext0, attn_ext1;
+	float p1, p2, p3;
+	float score;
+	float attn0, attn1, attn2, attn3, attn4, attn5, attn6;
+	float dx1, dy1, dz1;
+	float dx2, dy2, dz2;
+	float dx3, dy3, dz3;
+	float dx4, dy4, dz4;
+	float dx5, dy5, dz5;
+	float dx6, dy6, dz6;
+	float attn_ext0, attn_ext1;
 	
-	double value = 0;
+	float value = 0;
 	if (inSum <= 1) { /* We're inside the tetrahedron (3-Simplex) at (0,0,0) */
 		
 		/* Determine which two of (0,0,1), (0,1,0), (1,0,0) are closest. */
@@ -858,36 +857,36 @@ double open_simplex_noise3(struct osn_context *ctx, double x, double y, double z
 /* 
  * 4D OpenSimplex (Simplectic) Noise.
  */
-double open_simplex_noise4(struct osn_context *ctx, double x, double y, double z, double w)
+float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, float w)
 {
-	double uins;
-	double dx1, dy1, dz1, dw1;
-	double dx2, dy2, dz2, dw2;
-	double dx3, dy3, dz3, dw3;
-	double dx4, dy4, dz4, dw4;
-	double dx5, dy5, dz5, dw5;
-	double dx6, dy6, dz6, dw6;
-	double dx7, dy7, dz7, dw7;
-	double dx8, dy8, dz8, dw8;
-	double dx9, dy9, dz9, dw9;
-	double dx10, dy10, dz10, dw10;
-	double attn0, attn1, attn2, attn3, attn4;
-	double attn5, attn6, attn7, attn8, attn9, attn10;
-	double attn_ext0, attn_ext1, attn_ext2;
+	float uins;
+	float dx1, dy1, dz1, dw1;
+	float dx2, dy2, dz2, dw2;
+	float dx3, dy3, dz3, dw3;
+	float dx4, dy4, dz4, dw4;
+	float dx5, dy5, dz5, dw5;
+	float dx6, dy6, dz6, dw6;
+	float dx7, dy7, dz7, dw7;
+	float dx8, dy8, dz8, dw8;
+	float dx9, dy9, dz9, dw9;
+	float dx10, dy10, dz10, dw10;
+	float attn0, attn1, attn2, attn3, attn4;
+	float attn5, attn6, attn7, attn8, attn9, attn10;
+	float attn_ext0, attn_ext1, attn_ext2;
 	int8_t c, c1, c2;
 	int8_t aPoint, bPoint;
-	double aScore, bScore;
+	float aScore, bScore;
 	int aIsBiggerSide;
 	int bIsBiggerSide;
-	double p1, p2, p3, p4;
-	double score;
+	float p1, p2, p3, p4;
+	float score;
 
 	/* Place input coordinates on simplectic honeycomb. */
-	double stretchOffset = (x + y + z + w) * STRETCH_CONSTANT_4D;
-	double xs = x + stretchOffset;
-	double ys = y + stretchOffset;
-	double zs = z + stretchOffset;
-	double ws = w + stretchOffset;
+	float stretchOffset = (x + y + z + w) * STRETCH_CONSTANT_4D;
+	float xs = x + stretchOffset;
+	float ys = y + stretchOffset;
+	float zs = z + stretchOffset;
+	float ws = w + stretchOffset;
 	
 	/* Floor to get simplectic honeycomb coordinates of rhombo-hypercube super-cell origin. */
 	int xsb = fastFloor(xs);
@@ -896,36 +895,36 @@ double open_simplex_noise4(struct osn_context *ctx, double x, double y, double z
 	int wsb = fastFloor(ws);
 	
 	/* Skew out to get actual coordinates of stretched rhombo-hypercube origin. We'll need these later. */
-	double squishOffset = (xsb + ysb + zsb + wsb) * SQUISH_CONSTANT_4D;
-	double xb = xsb + squishOffset;
-	double yb = ysb + squishOffset;
-	double zb = zsb + squishOffset;
-	double wb = wsb + squishOffset;
+	float squishOffset = (xsb + ysb + zsb + wsb) * SQUISH_CONSTANT_4D;
+	float xb = xsb + squishOffset;
+	float yb = ysb + squishOffset;
+	float zb = zsb + squishOffset;
+	float wb = wsb + squishOffset;
 	
 	/* Compute simplectic honeycomb coordinates relative to rhombo-hypercube origin. */
-	double xins = xs - xsb;
-	double yins = ys - ysb;
-	double zins = zs - zsb;
-	double wins = ws - wsb;
+	float xins = xs - xsb;
+	float yins = ys - ysb;
+	float zins = zs - zsb;
+	float wins = ws - wsb;
 	
 	/* Sum those together to get a value that determines which region we're in. */
-	double inSum = xins + yins + zins + wins;
+	float inSum = xins + yins + zins + wins;
 
 	/* Positions relative to origin point. */
-	double dx0 = x - xb;
-	double dy0 = y - yb;
-	double dz0 = z - zb;
-	double dw0 = w - wb;
+	float dx0 = x - xb;
+	float dy0 = y - yb;
+	float dz0 = z - zb;
+	float dw0 = w - wb;
 	
 	/* We'll be defining these inside the next block and using them afterwards. */
-	double dx_ext0, dy_ext0, dz_ext0, dw_ext0;
-	double dx_ext1, dy_ext1, dz_ext1, dw_ext1;
-	double dx_ext2, dy_ext2, dz_ext2, dw_ext2;
+	float dx_ext0, dy_ext0, dz_ext0, dw_ext0;
+	float dx_ext1, dy_ext1, dz_ext1, dw_ext1;
+	float dx_ext2, dy_ext2, dz_ext2, dw_ext2;
 	int xsv_ext0, ysv_ext0, zsv_ext0, wsv_ext0;
 	int xsv_ext1, ysv_ext1, zsv_ext1, wsv_ext1;
 	int xsv_ext2, ysv_ext2, zsv_ext2, wsv_ext2;
 	
-	double value = 0;
+	float value = 0;
 	if (inSum <= 1) { /* We're inside the pentachoron (4-Simplex) at (0,0,0,0) */
 
 		/* Determine which two of (0,0,0,1), (0,0,1,0), (0,1,0,0), (1,0,0,0) are closest. */
