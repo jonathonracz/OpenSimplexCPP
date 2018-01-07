@@ -13,28 +13,21 @@
  *   of any particular randomization library, so results
  *   will be the same when ported to other languages.
  */
-#include <math.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <errno.h>
 
 #include "open-simplex-noise.h"
 
-#define STRETCH_CONSTANT_2D (-0.211324865405187)    /* (1 / sqrt(2 + 1) - 1 ) / 2; */
-#define SQUISH_CONSTANT_2D  (0.366025403784439)     /* (sqrt(2 + 1) -1) / 2; */
-#define STRETCH_CONSTANT_3D (-1.0 / 6.0)            /* (1 / sqrt(3 + 1) - 1) / 3; */
-#define SQUISH_CONSTANT_3D  (1.0 / 3.0)             /* (sqrt(3+1)-1)/3; */
-#define STRETCH_CONSTANT_4D (-0.138196601125011)    /* (1 / sqrt(4 + 1) - 1) / 4; */
-#define SQUISH_CONSTANT_4D  (0.309016994374947)     /* (sqrt(4 + 1) - 1) / 4; */
+static float STRETCH_CONSTANT_2D = -0.211324865405187f;    /* (1 / sqrt(2 + 1) - 1 ) / 2; */
+static float SQUISH_CONSTANT_2D = 0.366025403784439f;     /* (sqrt(2 + 1) -1) / 2; */
+static float STRETCH_CONSTANT_3D = (-1.0f / 6.0f);            /* (1 / sqrt(3 + 1) - 1) / 3; */
+static float SQUISH_CONSTANT_3D = (1.0f / 3.0f);             /* (sqrt(3+1)-1)/3; */
+static float STRETCH_CONSTANT_4D = -0.138196601125011f;    /* (1 / sqrt(4 + 1) - 1) / 4; */
+static float SQUISH_CONSTANT_4D = 0.309016994374947f;     /* (sqrt(4 + 1) - 1) / 4; */
 	
-#define NORM_CONSTANT_2D (47.0)
-#define NORM_CONSTANT_3D (103.0)
-#define NORM_CONSTANT_4D (30.0)
+static float NORM_CONSTANT_2D = 47.0f;
+static float NORM_CONSTANT_3D = 103.0f;
+static float NORM_CONSTANT_4D = 30.0f;
 	
-#define DEFAULT_SEED (0LL)
-
-#define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
+static uint64_t DEFAULT_SEED = 0LL;
 
 /* 
  * Gradients for 2D. They approximate the directions to the
@@ -117,7 +110,7 @@ static float extrapolate4(osn_context *ctx, int xsb, int ysb, int zsb, int wsb, 
 		+ gradients4D[index + 3] * dw;
 }
 	
-static int fastFloor(float x) {
+static int floor(float x) {
 	int xi = (int) x;
 	return x < xi ? xi - 1 : xi;
 }
@@ -150,7 +143,7 @@ int open_simplex_noise(int64_t seed, osn_context *ctx)
 		if (r < 0)
 			r += (i + 1);
 		perm[i] = source[r];
-		permGradIndex3D[i] = (short)((perm[i] % (ARRAYSIZE(gradients3D) / 3)) * 3);
+		permGradIndex3D[i] = (short)((perm[i] % ((sizeof((gradients3D)) / sizeof((gradients3D)[0])) / 3)) * 3);
 		source[r] = source[i];
 	}
 	return 0;
@@ -159,15 +152,14 @@ int open_simplex_noise(int64_t seed, osn_context *ctx)
 /* 2D OpenSimplex (Simplectic) Noise. */
 float open_simplex_noise2(struct osn_context *ctx, float x, float y) 
 {
-	
 	/* Place input coordinates onto grid. */
 	float stretchOffset = (x + y) * STRETCH_CONSTANT_2D;
 	float xs = x + stretchOffset;
 	float ys = y + stretchOffset;
 		
 	/* Floor to get grid coordinates of rhombus (stretched square) super-cell origin. */
-	int xsb = fastFloor(xs);
-	int ysb = fastFloor(ys);
+	int xsb = floor(xs);
+	int ysb = floor(ys);
 		
 	/* Skew out to get actual coordinates of rhombus origin. We'll need these later. */
 	float squishOffset = (xsb + ysb) * SQUISH_CONSTANT_2D;
@@ -294,9 +286,9 @@ float open_simplex_noise3(struct osn_context *ctx, float x, float y, float z)
 	float zs = z + stretchOffset;
 	
 	/* Floor to get simplectic honeycomb coordinates of rhombohedron (stretched cube) super-cell origin. */
-	int xsb = fastFloor(xs);
-	int ysb = fastFloor(ys);
-	int zsb = fastFloor(zs);
+	int xsb = floor(xs);
+	int ysb = floor(ys);
+	int zsb = floor(zs);
 	
 	/* Skew out to get actual coordinates of rhombohedron origin. We'll need these later. */
 	float squishOffset = (xsb + ysb + zsb) * SQUISH_CONSTANT_3D;
@@ -889,10 +881,10 @@ float open_simplex_noise4(struct osn_context *ctx, float x, float y, float z, fl
 	float ws = w + stretchOffset;
 	
 	/* Floor to get simplectic honeycomb coordinates of rhombo-hypercube super-cell origin. */
-	int xsb = fastFloor(xs);
-	int ysb = fastFloor(ys);
-	int zsb = fastFloor(zs);
-	int wsb = fastFloor(ws);
+	int xsb = floor(xs);
+	int ysb = floor(ys);
+	int zsb = floor(zs);
+	int wsb = floor(ws);
 	
 	/* Skew out to get actual coordinates of stretched rhombo-hypercube origin. We'll need these later. */
 	float squishOffset = (xsb + ysb + zsb + wsb) * SQUISH_CONSTANT_4D;

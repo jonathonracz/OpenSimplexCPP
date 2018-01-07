@@ -20,7 +20,7 @@
  */
 
 #if !defined(__AIR64__) && !defined(OPENCL_COMPILER) && !defined(__NVCC__)
-#include <cstdlib>
+#include <cstdlib> // Needed for fixed width types.
 #endif
 
 struct osn_context {
