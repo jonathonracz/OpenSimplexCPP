@@ -34,11 +34,6 @@
 	
 #define DEFAULT_SEED (0LL)
 
-struct osn_context {
-	int16_t *perm;
-	int16_t *permGradIndex3D;
-};
-
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
 /* 
@@ -94,7 +89,7 @@ static const signed char gradients4D[] = {
 	-3, -1, -1, -1,     -1, -3, -1, -1,     -1, -1, -3, -1,     -1, -1, -1, -3,
 };
 
-static double extrapolate2(struct osn_context *ctx, int xsb, int ysb, double dx, double dy)
+static double extrapolate2(osn_context *ctx, int xsb, int ysb, double dx, double dy)
 {
 	int16_t *perm = ctx->perm;	
 	int index = perm[(perm[xsb & 0xFF] + ysb) & 0xFF] & 0x0E;
@@ -102,7 +97,7 @@ static double extrapolate2(struct osn_context *ctx, int xsb, int ysb, double dx,
 		+ gradients2D[index + 1] * dy;
 }
 	
-static double extrapolate3(struct osn_context *ctx, int xsb, int ysb, int zsb, double dx, double dy, double dz)
+static double extrapolate3(osn_context *ctx, int xsb, int ysb, int zsb, double dx, double dy, double dz)
 {
 	int16_t *perm = ctx->perm;	
 	int16_t *permGradIndex3D = ctx->permGradIndex3D;
@@ -112,7 +107,7 @@ static double extrapolate3(struct osn_context *ctx, int xsb, int ysb, int zsb, d
 		+ gradients3D[index + 2] * dz;
 }
 	
-static double extrapolate4(struct osn_context *ctx, int xsb, int ysb, int zsb, int wsb, double dx, double dy, double dz, double dw)
+static double extrapolate4(osn_context *ctx, int xsb, int ysb, int zsb, int wsb, double dx, double dy, double dz, double dw)
 {
 	int16_t *perm = ctx->perm;
 	int index = perm[(perm[(perm[(perm[xsb & 0xFF] + ysb) & 0xFF] + zsb) & 0xFF] + wsb) & 0xFF] & 0xFC;
@@ -122,42 +117,9 @@ static double extrapolate4(struct osn_context *ctx, int xsb, int ysb, int zsb, i
 		+ gradients4D[index + 3] * dw;
 }
 	
-static INLINE int fastFloor(double x) {
+static int fastFloor(double x) {
 	int xi = (int) x;
 	return x < xi ? xi - 1 : xi;
-}
-	
-static int allocate_perm(struct osn_context *ctx, int nperm, int ngrad)
-{
-	if (ctx->perm)
-		free(ctx->perm);
-	if (ctx->permGradIndex3D)
-		free(ctx->permGradIndex3D);
-	ctx->perm = (int16_t *) malloc(sizeof(*ctx->perm) * nperm); 
-	if (!ctx->perm)
-		return -ENOMEM;
-	ctx->permGradIndex3D = (int16_t *) malloc(sizeof(*ctx->permGradIndex3D) * ngrad);
-	if (!ctx->permGradIndex3D) {
-		free(ctx->perm);
-		return -ENOMEM;
-	}
-	return 0;
-}
-	
-int open_simplex_noise_init_perm(struct osn_context *ctx, int16_t p[], int nelements)
-{
-	int i, rc;
-
-	rc = allocate_perm(ctx, nelements, 256);
-	if (rc)
-		return rc;
-	memcpy(ctx->perm, p, sizeof(*ctx->perm) * nelements);
-		
-	for (i = 0; i < 256; i++) {
-		/* Since 3D has 24 gradients, simple bitmask won't work, so precompute modulo array. */
-		ctx->permGradIndex3D[i] = (int16_t)((ctx->perm[i] % (ARRAYSIZE(gradients3D) / 3)) * 3);
-	}
-	return 0;
 }
 
 /*	
@@ -165,7 +127,7 @@ int open_simplex_noise_init_perm(struct osn_context *ctx, int16_t p[], int nelem
  * Generates a proper permutation (i.e. doesn't merely perform N successive pair
  * swaps on a base array).  Uses a simple 64-bit LCG.
  */
-int open_simplex_noise(int64_t seed, struct osn_context **ctx)
+int open_simplex_noise(int64_t seed, osn_context *ctx)
 {
 	int rc;
 	int16_t source[256];
@@ -174,20 +136,8 @@ int open_simplex_noise(int64_t seed, struct osn_context **ctx)
 	int16_t *permGradIndex3D;
 	int r;
 
-	*ctx = (struct osn_context *) malloc(sizeof(**ctx));
-	if (!(*ctx))
-		return -ENOMEM;
-	(*ctx)->perm = NULL;
-	(*ctx)->permGradIndex3D = NULL;
-
-	rc = allocate_perm(*ctx, 256, 256);
-	if (rc) {
-		free(*ctx);
-		return rc;
-	}
-
-	perm = (*ctx)->perm;
-	permGradIndex3D = (*ctx)->permGradIndex3D;
+	perm = ctx->perm;
+	permGradIndex3D = ctx->permGradIndex3D;
 
 	for (i = 0; i < 256; i++)
 		source[i] = (int16_t) i;
@@ -204,21 +154,6 @@ int open_simplex_noise(int64_t seed, struct osn_context **ctx)
 		source[r] = source[i];
 	}
 	return 0;
-}
-
-void open_simplex_noise_free(struct osn_context *ctx)
-{
-	if (!ctx)
-		return;
-	if (ctx->perm) {
-		free(ctx->perm);
-		ctx->perm = NULL;	
-	}
-	if (ctx->permGradIndex3D) {
-		free(ctx->permGradIndex3D);
-		ctx->permGradIndex3D = NULL;
-	}
-	free(ctx);
 }
 	
 /* 2D OpenSimplex (Simplectic) Noise. */

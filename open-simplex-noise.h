@@ -1,5 +1,4 @@
-#ifndef OPEN_SIMPLEX_NOISE_H__
-#define OPEN_SIMPLEX_NOISE_H__
+#pragma once
 
 /*
  * OpenSimplex (Simplectic) Noise in C.
@@ -20,21 +19,18 @@
  *   will be the same when ported to other languages.
  */
 
-#ifdef __cplusplus
-	extern "C" {
+#if !defined(__AIR64__) && !defined(OPENCL_COMPILER) && !defined(__NVCC__)
+#include <cstdlib>
 #endif
 
-struct osn_context;
+struct osn_context {
+	int16_t perm[256];
+	int16_t permGradIndex3D[256];
+};
 
-int open_simplex_noise(int64_t seed, struct osn_context **ctx);
-double open_simplex_noise2(struct osn_context *ctx, double x, double y);
-double open_simplex_noise3(struct osn_context *ctx, double x, double y, double z);
-double open_simplex_noise4(struct osn_context *ctx, double x, double y, double z, double w);
-
-#ifdef __cplusplus
-	}
-#endif
-
-#endif
+int open_simplex_noise(int64_t seed, osn_context *ctx);
+double open_simplex_noise2(osn_context *ctx, double x, double y);
+double open_simplex_noise3(osn_context *ctx, double x, double y, double z);
+double open_simplex_noise4(osn_context *ctx, double x, double y, double z, double w);
 
 //class 

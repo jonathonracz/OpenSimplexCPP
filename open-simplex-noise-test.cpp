@@ -77,7 +77,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 	uint32_t image2d[HEIGHT][WIDTH];
 	uint32_t image3d[HEIGHT][WIDTH];
 	uint32_t image4d[HEIGHT][WIDTH];
-	struct osn_context *ctx;
+	osn_context ctx;
 
 	open_simplex_noise(77374, &ctx);
 
@@ -87,22 +87,22 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 			value = open_simplex_noise4(ctx, (double) x / FEATURE_SIZE, (double) y / FEATURE_SIZE, 0.0, 0.0);
 #else
 			/* Use three octaves: frequency N, N/2 and N/4 with relative amplitudes 4:2:1. */
-			v0 = open_simplex_noise4(ctx, (double) x / FEATURE_SIZE / 4,
+			v0 = open_simplex_noise4(&ctx, (double) x / FEATURE_SIZE / 4,
 						(double) y / FEATURE_SIZE / 4, 0.0, 0.0);
-			v1 = open_simplex_noise4(ctx, (double) x / FEATURE_SIZE / 2,
+			v1 = open_simplex_noise4(&ctx, (double) x / FEATURE_SIZE / 2,
 						(double) y / FEATURE_SIZE / 2, 0.0, 0.0);
-			v2 = open_simplex_noise4(ctx, (double) x / FEATURE_SIZE / 1,
+			v2 = open_simplex_noise4(&ctx, (double) x / FEATURE_SIZE / 1,
 						(double) y / FEATURE_SIZE / 1, 0.0, 0.0);
 			value = v0 * 4 / 7.0 + v1 * 2 / 7.0 + v2 * 1 / 7.0;
 #endif
 			rgb = 0x010101 * (uint32_t) ((value + 1) * 127.5);
 			image2d[y][x] = (0x0ff << 24) | (rgb);
 
-			value = open_simplex_noise2(ctx, (double) x / FEATURE_SIZE, (double) y / FEATURE_SIZE);
+			value = open_simplex_noise2(&ctx, (double) x / FEATURE_SIZE, (double) y / FEATURE_SIZE);
 			rgb = 0x010101 * (uint32_t) ((value + 1) * 127.5);
 			image3d[y][x] = (0x0ff << 24) | (rgb);
 
-			value = open_simplex_noise3(ctx, (double) x / FEATURE_SIZE, (double) y / FEATURE_SIZE, 0.0);
+			value = open_simplex_noise3(&ctx, (double) x / FEATURE_SIZE, (double) y / FEATURE_SIZE, 0.0);
 			rgb = 0x010101 * (uint32_t) ((value + 1) * 127.5);
 			image4d[y][x] = (0x0ff << 24) | (rgb);
 		}
@@ -110,7 +110,6 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 	write_png_image("test2d.png", (unsigned char *) image2d, WIDTH, HEIGHT, 1);
 	write_png_image("test3d.png", (unsigned char *) image3d, WIDTH, HEIGHT, 1);
 	write_png_image("test4d.png", (unsigned char *) image4d, WIDTH, HEIGHT, 1);
-	open_simplex_noise_free(ctx);
 	return 0;
 }
 
