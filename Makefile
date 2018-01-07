@@ -1,7 +1,7 @@
 all:	open-simplex-noise-test
 
 #akCXXFLAGS=-W -Wall -Wextra -O3
-CXXFLAGS=-std=c++11 -W -Wall -Wextra -g
+CXXFLAGS=-std=c++11 -W -Wall -Wextra -Wno-unused-parameter -g
 
 open-simplex-noise-test:	open-simplex-noise-test.cpp
 	g++ ${CXXFLAGS} -o open-simplex-noise-test open-simplex-noise-test.cpp -lpng
