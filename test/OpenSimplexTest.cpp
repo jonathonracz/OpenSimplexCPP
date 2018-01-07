@@ -27,7 +27,7 @@
 #include <vector>
 #include <fstream>
 
-#include "OpenSimplex.h"
+#include "OpenSimplex/OpenSimplex.h"
 
 #pragma pack(push, 1)
 struct TGAHeader {

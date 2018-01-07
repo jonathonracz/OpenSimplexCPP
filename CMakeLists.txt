@@ -7,4 +7,5 @@ else ()
 add_compile_options(/W4)
 endif ()
 
-add_executable(OpenSimplexTest OpenSimplexTest.cpp)
+include_directories(include)
+add_executable(OpenSimplexTest test/OpenSimplexTest.cpp)
