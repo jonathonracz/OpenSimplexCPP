@@ -79,16 +79,15 @@ int main(int argc, char* argv[])
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float value;
-
 #if defined(SINGLE_OCTAVE)
             value = openSimplex.noise4((float) x / featureSize, (float) y / featureSize, 0.0, 0.0);
 #else
             /* Use three octaves: frequency N, N/2 and N/4 with relative amplitudes 4:2:1. */
-            int v0 = openSimplex.noise4((float) x / featureSize / 4,
+            float v0 = openSimplex.noise4((float) x / featureSize / 4,
                         (float) y / featureSize / 4, 0.0, 0.0);
-            int v1 = openSimplex.noise4((float) x / featureSize / 2,
+            float v1 = openSimplex.noise4((float) x / featureSize / 2,
                         (float) y / featureSize / 2, 0.0, 0.0);
-            int v2 = openSimplex.noise4((float) x / featureSize / 1,
+            float v2 = openSimplex.noise4((float) x / featureSize / 1,
                         (float) y / featureSize / 1, 0.0, 0.0);
             value = v0 * 4 / 7.0 + v1 * 2 / 7.0 + v2 * 1 / 7.0;
 #endif
@@ -104,8 +103,10 @@ int main(int argc, char* argv[])
             image4d[(y * width) + x] = (0x0ff << 24) | (rgb);
         }
     }
+
     write_tga_image("test2d.tga", image2d, width, height);
     write_tga_image("test3d.tga", image3d, width, height);
     write_tga_image("test4d.tga", image4d, width, height);
+
     return 0;
 }
