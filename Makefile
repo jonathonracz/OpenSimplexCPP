@@ -8,4 +8,3 @@ OpenSimplexTest:	OpenSimplexTest.cpp
 
 clean:
 	rm -f OpenSimplexTest test2d.tga test3d.tga test4d.tga
-
