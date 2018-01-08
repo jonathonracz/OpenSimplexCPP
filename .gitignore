@@ -4,3 +4,4 @@ open-simplex-noise-test
 *.dSYM
 *.tga
 OpenSimplexTest
+build

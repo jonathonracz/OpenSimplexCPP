@@ -1,0 +1,2 @@
+add_executable(OpenSimplexExample OpenSimplexExample.cpp)
+target_link_libraries(OpenSimplexExample LINK_PUBLIC OpenSimplex)
