@@ -20,7 +20,7 @@ OpenSimplex::Seed::computeContextForSeed(ctx, 42);
 
 Add the `OpenSimplex::Context` object to your uniform buffer (take note that it's 512 bytes).
 
-In your shader, use the `OpenSimplex::Context` to compute per-fragment noise (note this example is in metal - other languages will be very similar:
+In your shader, use the `OpenSimplex::Context` to compute per-fragment noise (note this example is in Metal - other languages will be very similar):
 
 ```c++
 using namespace metal;
