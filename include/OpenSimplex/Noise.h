@@ -20,12 +20,6 @@ private:
     static float extrapolate4(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, int zsb, int wsb, float dx, float dy, float dz, float dw);
 };
 
-float Noise::floor(float x)
-{
-    int xi = (int) x;
-    return x < xi ? xi - 1 : xi;
-}
-
 /* 2D OpenSimplex (Simplectic) Noise. */
 float Noise::noise2(OPENSIMPLEX_GPU_CONSTANT const Context& ctx, float x, float y)
 {
@@ -2061,6 +2055,12 @@ float Noise::noise4(OPENSIMPLEX_GPU_CONSTANT const Context& ctx, float x, float 
     }
 
     return value / normConstant;
+}
+
+float Noise::floor(float x)
+{
+    int xi = (int) x;
+    return x < xi ? xi - 1 : xi;
 }
 
 float Noise::extrapolate2(OPENSIMPLEX_GPU_CONSTANT const Context& ctx, int xsb, int ysb, float dx, float dy)
