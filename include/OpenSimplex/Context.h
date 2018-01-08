@@ -4,9 +4,11 @@
 
 namespace OpenSimplex
 {
-    struct Context
-    {
-        int16_t perm[256];
-        int16_t permGradIndex3D[256];
-    };
+
+struct Context
+{
+    int16_t perm[256];
+    int16_t permGradIndex3D[256];
+};
+
 }

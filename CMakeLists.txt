@@ -13,6 +13,7 @@ file(GLOB HEADERS "include/OpenSimplex/*")
 file(GLOB SOURCES "src/OpenSimplex/*")
 
 add_library(OpenSimplex ${HEADERS} ${SOURCES})
+set_target_properties(OpenSimplex PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(OpenSimplex PUBLIC "include")
 
