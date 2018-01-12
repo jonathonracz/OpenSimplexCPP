@@ -44,7 +44,7 @@ namespace OpenSimplex
 
 namespace Seed
 {
-    void computeContextForSeed(Context& context, int64_t seed);
+    inline void computeContextForSeed(Context& context, int64_t seed);
 }
 
 /*

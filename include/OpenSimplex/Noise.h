@@ -40,15 +40,15 @@ namespace OpenSimplex
 class Noise
 {
 public:
-    static float noise2(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y);
-    static float noise3(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y, float z);
-    static float noise4(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y, float z, float w);
+    inline static float noise2(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y);
+    inline static float noise3(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y, float z);
+    inline static float noise4(OPENSIMPLEX_GPU_CONSTANT const Context& context, float x, float y, float z, float w);
 
 private:
-    static float floor(float x);
-    static float extrapolate2(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, float dx, float dy);
-    static float extrapolate3(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, int zsb, float dx, float dy, float dz);
-    static float extrapolate4(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, int zsb, int wsb, float dx, float dy, float dz, float dw);
+    inline static float floor(float x);
+    inline static float extrapolate2(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, float dx, float dy);
+    inline static float extrapolate3(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, int zsb, float dx, float dy, float dz);
+    inline static float extrapolate4(OPENSIMPLEX_GPU_CONSTANT const Context& context, int xsb, int ysb, int zsb, int wsb, float dx, float dy, float dz, float dw);
 };
 
 /* 2D OpenSimplex (Simplectic) Noise. */
