@@ -31,7 +31,7 @@
 
 #pragma once
 
-#if defined(__AIR64__) || defined(OPENCL_COMPILER) || defined(__NVCC__)
+#if defined(__METAL_VERSION__) || defined(OPENCL_COMPILER) || defined(__NVCC__)
     #define OPENSIMPLEX_IS_GPU 1
 #else
     #define OPENSIMPLEX_IS_GPU 0
@@ -41,7 +41,7 @@
     #include <cstdint> /* For fixed width types. */
 #endif
 
-#if defined(__AIR64__)
+#if defined(__METAL_VERSION__)
     #define OPENSIMPLEX_GPU_CONSTANT constant
 #elif defined(OPENCL_COMPILER)
     #define OPENSIMPLEX_GPU_CONSTANT __constant

@@ -14,8 +14,15 @@ In your CPU code, compute a seeded context:
 
 ...
 
-OpenSimplex::Context ctx;
-OpenSimplex::Seed::computeContextForSeed(ctx, 42);
+struct Uniforms
+{
+    ...
+    OpenSimplex::Context ctx;
+};
+
+Uniforms uniforms;
+OpenSimplex::Seed::computeContextForSeed(uniforms.ctx, 42);
+// Upload Uniforms to GPU
 ```
 
 Add the `OpenSimplex::Context` object to your uniform buffer (take note that it's 512 bytes).
